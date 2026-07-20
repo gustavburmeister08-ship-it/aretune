@@ -242,8 +242,14 @@ export default function CheckIn() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
+      <View className="flex-row justify-end px-6 pt-4">
+        <TouchableOpacity onPress={() => router.push('/(app)/pillars')}>
+          <Text className="text-white/50 text-xs font-medium">Browse Pillars ›</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Progress bar */}
-      <View className="h-1 bg-surface-border mx-6 mt-4 rounded-full">
+      <View className="h-1 bg-surface-border mx-6 mt-3 rounded-full">
         <View
           className="h-1 bg-gold rounded-full"
           style={{

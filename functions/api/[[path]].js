@@ -380,6 +380,96 @@ async function handleAudit(request, env) {
   return json(output);
 }
 
+async function generateChatReply(env, contextPrompt, history) {
+  const messages = [
+    { role: 'user', content: contextPrompt },
+    { role: 'assistant', content: 'Understood. I will use this profile context where relevant to the conversation.' },
+    ...history.map((entry) => ({ role: entry.role, content: entry.content })),
+  ];
+  if (env.ANTHROPIC_API_KEY) {
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: ANTHROPIC_MODEL,
+          max_tokens: 800,
+          temperature: 0.7,
+          system: SYSTEM_PROMPT,
+          messages,
+        }),
+      });
+      if (!response.ok) {
+        const details = await response.text();
+        throw new Error(`HTTP ${response.status}: ${details.slice(0, 500)}`);
+      }
+      const result = await response.json();
+      const text = result.content?.find((block) => block.type === 'text')?.text;
+      if (!text) throw new Error('No text output');
+      return { text, usage: result.usage ?? {}, provider: 'anthropic', model: ANTHROPIC_MODEL };
+    } catch (error) {
+      // Keep the chat available during provider outages, invalid credentials, or quota issues.
+      console.error(`Anthropic chat failed; using Workers AI fallback: ${String(error)}`);
+    }
+  }
+
+  if (!env.AI) throw new Error('No AI provider is configured');
+  const result = await env.AI.run(WORKERS_AI_MODEL, {
+    messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+    max_tokens: 800,
+    temperature: 0.7,
+  });
+  const text = typeof result?.response === 'string' ? result.response : String(result?.response ?? '');
+  if (!text) throw new Error('No text output');
+  return { text, usage: result.usage ?? {}, provider: 'cloudflare', model: WORKERS_AI_MODEL };
+}
+
+async function handleChat(request, env) {
+  const user = await authenticatedUser(request, env);
+  const body = await request.json();
+  if (typeof body.conversationId !== 'string' || !body.conversationId) return json({ error: 'Invalid request' }, 400);
+  await requireAiConsent(env, user.id);
+  await requireBudget(env, user.id);
+
+  const conversationResponse = await supabaseRequest(
+    env,
+    `/rest/v1/ai_conversations?id=eq.${encodeURIComponent(body.conversationId)}&user_id=eq.${encodeURIComponent(user.id)}&select=id`,
+  );
+  if (!conversationResponse.ok || !(await conversationResponse.json())[0]) throw new Error('AUTH:Conversation not found');
+
+  const messagesResponse = await supabaseRequest(
+    env,
+    `/rest/v1/ai_messages?conversation_id=eq.${encodeURIComponent(body.conversationId)}&select=role,content&order=created_at.asc&limit=40`,
+  );
+  if (!messagesResponse.ok) throw new Error('Unable to load conversation');
+  const history = await messagesResponse.json();
+  if (!history.length || history[history.length - 1].role !== 'user') throw new Error('Invalid request');
+
+  const contextPrompt = `User profile context — use only where relevant, never repeat it verbatim:\nPhase: ${body.phase ?? 'unknown'}\nActive pillars: ${JSON.stringify(body.activePillars ?? [])}\nPillar scores: ${JSON.stringify(body.pillarScores ?? {})}`;
+  const generation = await generateChatReply(env, contextPrompt, history);
+
+  const insertReply = await supabaseRequest(env, '/rest/v1/ai_messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    body: JSON.stringify({ conversation_id: body.conversationId, role: 'assistant', content: generation.text }),
+  });
+  if (!insertReply.ok) throw new Error('Unable to store AI reply');
+  const [reply] = await insertReply.json();
+
+  await supabaseRequest(env, `/rest/v1/ai_conversations?id=eq.${encodeURIComponent(body.conversationId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ updated_at: new Date().toISOString() }),
+  });
+
+  await recordUsage(env, user.id, 'chat', generation.provider, generation.model, generation.usage);
+  return json({ id: reply.id, conversationId: reply.conversation_id, role: 'assistant', content: reply.content, createdAt: reply.created_at });
+}
+
 async function handleDeleteAccount(request, env) {
   const user = await authenticatedUser(request, env);
   for (const bucket of ['avatars', 'social-media']) {
@@ -410,6 +500,7 @@ export async function onRequest(context) {
     if (path === '/api/account' && request.method === 'DELETE') return await handleDeleteAccount(request, env);
     if (path === '/api/directive' && request.method === 'POST') return await handleDirective(request, env);
     if (path === '/api/audit/summary' && request.method === 'POST') return await handleAudit(request, env);
+    if (path === '/api/chat' && request.method === 'POST') return await handleChat(request, env);
     const integrationMatch = path.match(/^\/api\/integrations\/([a-z0-9-]+)(?:\/(connect|callback|sync))?$/);
     if (integrationMatch) {
       const [, providerId, action] = integrationMatch;

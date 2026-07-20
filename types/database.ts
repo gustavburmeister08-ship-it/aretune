@@ -168,8 +168,20 @@ export interface Database {
         Relationships: EmptyRelationships;
       };
       ai_usage_events: {
-        Row: { id: string; user_id: string; route: 'directive' | 'audit'; provider: string; model: string; input_tokens: number; output_tokens: number; created_at: string };
-        Insert: { id?: string; user_id: string; route: 'directive' | 'audit'; provider: string; model: string; input_tokens?: number; output_tokens?: number; created_at?: string };
+        Row: { id: string; user_id: string; route: 'directive' | 'audit' | 'chat'; provider: string; model: string; input_tokens: number; output_tokens: number; created_at: string };
+        Insert: { id?: string; user_id: string; route: 'directive' | 'audit' | 'chat'; provider: string; model: string; input_tokens?: number; output_tokens?: number; created_at?: string };
+        Update: never;
+        Relationships: EmptyRelationships;
+      };
+      ai_conversations: {
+        Row: { id: string; user_id: string; title: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; title?: string | null; created_at?: string; updated_at?: string };
+        Update: { title?: string | null; updated_at?: string };
+        Relationships: EmptyRelationships;
+      };
+      ai_messages: {
+        Row: { id: string; conversation_id: string; role: 'user' | 'assistant'; content: string; created_at: string };
+        Insert: { id?: string; conversation_id: string; role: 'user' | 'assistant'; content: string; created_at?: string };
         Update: never;
         Relationships: EmptyRelationships;
       };

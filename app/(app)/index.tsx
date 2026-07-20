@@ -78,20 +78,30 @@ export default function Dashboard() {
       >
         {/* Header */}
         <View className="px-6 pt-6 pb-4">
-          <Text className="text-gold text-xs tracking-[4px] uppercase mb-1">
-            Phase: {phaseLabel}
-          </Text>
+          <View className="flex-row items-start justify-between mb-1">
+            <Text className="text-gold text-xs tracking-[4px] uppercase">
+              Phase: {phaseLabel}
+            </Text>
+            <TouchableOpacity onPress={() => router.push('/(app)/profile')}>
+              <Text style={{ fontSize: 20 }}>◉</Text>
+            </TouchableOpacity>
+          </View>
           <Text className="text-white text-2xl font-bold">
             {getGreeting()},{' '}
             {profile.displayName?.split(' ')[0] ?? 'Operator'}
           </Text>
-          <Text className="text-white/40 text-sm mt-1">
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </Text>
+          <View className="flex-row items-center justify-between mt-1">
+            <Text className="text-white/40 text-sm">
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </Text>
+            <TouchableOpacity onPress={() => router.push('/(app)/audit')}>
+              <Text className="text-white/50 text-xs font-medium">Weekly Audit ›</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Today's Directive */}

@@ -31,10 +31,10 @@ export default function AppLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="ai-chat"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="⚡" label="Today" focused={focused} />
+            <TabIcon emoji="✦" label="Chat" focused={focused} />
           ),
         }}
       />
@@ -42,23 +42,15 @@ export default function AppLayout() {
         name="checkin"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="✓" label="Check-in" focused={focused} />
+            <TabIcon emoji="✓" label="Tracking" focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="pillars"
+        name="index"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="◈" label="Pillars" focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="audit"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="📊" label="Audit" focused={focused} />
+            <TabIcon emoji="📊" label="Progress" focused={focused} />
           ),
         }}
       />
@@ -66,18 +58,13 @@ export default function AppLayout() {
         name="social"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="◎" label="Social" focused={focused} />
+            <TabIcon emoji="◎" label="Community" focused={focused} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="◉" label="Profile" focused={focused} />
-          ),
-        }}
-      />
+      <Tabs.Screen name="pillars" options={{ href: null }} />
+      <Tabs.Screen name="audit" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
       <Tabs.Screen name="privacy" options={{ href: null }} />
       <Tabs.Screen name="integrations" options={{ href: null }} />
       <Tabs.Screen name="category/[categoryId]" options={{ href: null }} />

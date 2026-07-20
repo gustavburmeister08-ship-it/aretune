@@ -8,7 +8,7 @@ import type {
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://app.aretune.com';
 
-async function authenticatedPost<T>(path: string, body: unknown): Promise<T> {
+export async function authenticatedPost<T>(path: string, body: unknown): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new Error('Authentication required');

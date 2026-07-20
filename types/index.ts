@@ -292,6 +292,29 @@ export interface AuditGenerationResult {
   gaps: string[];
 }
 
+export interface ChatConversation {
+  id: string;
+  userId: string;
+  title: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+}
+
+export interface ChatReplyInput {
+  conversationId: string;
+  phase: Phase;
+  activePillars: PillarId[];
+  pillarScores: Partial<Record<PillarId, number>>;
+}
+
 export interface ScoreBreakdown {
   consistency: number;
   progression: number;
