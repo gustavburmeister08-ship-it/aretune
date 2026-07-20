@@ -3,7 +3,7 @@ import { supabase } from '../supabase';
 import { persistCategoryScores } from '../category-tracking';
 import type { IntegrationConnection, IntegrationEvent, IntegrationMode, UserProfile } from '../../types';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://uebermensch-ai.pages.dev';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://app-uebermensch-ai.pages.dev';
 const ALL_PILLARS = ['body', 'mind', 'spirit', 'relationships', 'vocation', 'lore'] as const;
 
 function mapConnection(row: any): IntegrationConnection {

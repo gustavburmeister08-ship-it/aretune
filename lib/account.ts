@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://uebermensch-ai.pages.dev';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://app-uebermensch-ai.pages.dev';
 
 export async function exportAccountData(userId: string): Promise<Record<string, unknown>> {
   const [profile, socialProfile, socialLinks, socialPosts, socialLikes, socialComments, socialFollows, socialReports, conversations, conversationMembers, socialMessages, checkIns, metrics, categories, directives, audits, scores, onboarding, consents, events, integrationConnections, integrationEvents, integrationRuns] = await Promise.all([

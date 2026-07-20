@@ -6,7 +6,7 @@ import type {
   DirectiveGenerationResult,
 } from '../types';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://uebermensch-ai.pages.dev';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://app-uebermensch-ai.pages.dev';
 
 async function authenticatedPost<T>(path: string, body: unknown): Promise<T> {
   const { data } = await supabase.auth.getSession();
