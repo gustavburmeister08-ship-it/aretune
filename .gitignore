@@ -11,6 +11,7 @@ dist/
 web-build/
 .tmp-web-export/
 .tmp-functions-build/
+.tmp-pages-bundle/
 expo-env.d.ts
 
 # Native
