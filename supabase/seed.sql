@@ -1,0 +1,1 @@
+-- Intentionally empty. The versioned catalog is installed by migration 003.
