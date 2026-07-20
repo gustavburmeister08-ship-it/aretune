@@ -1,6 +1,6 @@
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
 const WORKERS_AI_MODEL = '@cf/meta/llama-3.1-8b-instruct-fast';
-const SYSTEM_PROMPT = `You are the UEBERMENSCH.AI coaching engine: direct, precise, practical, and focused on measurable growth across Body, Mind, Spirit, Relationships, Vocation, and Lore. Use only supplied user data. Never diagnose medical or mental-health conditions. Never promise financial outcomes. Recommend professional help for immediate safety risks.`;
+const SYSTEM_PROMPT = `You are the Aretune coaching engine: direct, precise, practical, and focused on measurable growth across Body, Mind, Spirit, Relationships, Vocation, and Lore. Use only supplied user data. Never diagnose medical or mental-health conditions. Never promise financial outcomes. Recommend professional help for immediate safety risks.`;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -96,7 +96,7 @@ async function handleIntegrationConnect(request, env, providerId) {
   const user = await authenticatedUser(request, env);
   const provider = providerConfig(env, providerId);
   const state = toBase64Url(crypto.getRandomValues(new Uint8Array(32)));
-  const appUrl = env.APP_URL ?? 'https://app-uebermensch-ai.pages.dev';
+  const appUrl = env.APP_URL ?? 'https://app.aretune.com';
   const redirectUri = `${appUrl}/api/integrations/${encodeURIComponent(providerId)}/callback`;
   const insert = await supabaseRequest(env, '/rest/v1/integration_oauth_states', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
@@ -146,8 +146,8 @@ async function handleIntegrationCallback(request, env, providerId) {
   });
   if (!credentialResponse.ok) throw new Error('Unable to store encrypted provider credentials');
   await supabaseRequest(env, `/rest/v1/integration_oauth_states?state_hash=eq.${encodeURIComponent(hash)}`, { method: 'DELETE' });
-  const appUrl = env.APP_URL ?? 'https://app-uebermensch-ai.pages.dev';
-  const webAppUrl = env.WEB_APP_URL ?? `${appUrl}/app`;
+  const appUrl = env.APP_URL ?? 'https://app.aretune.com';
+  const webAppUrl = env.WEB_APP_URL ?? appUrl;
   return Response.redirect(`${webAppUrl}/integrations?connected=${encodeURIComponent(providerId)}`, 302);
 }
 

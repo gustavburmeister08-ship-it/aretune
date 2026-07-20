@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Uebermensch",
-    "slug": "uebermensch-app",
+    "name": "Aretune",
+    "slug": "aretune-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "scheme": "uebermensch",
+    "scheme": "aretune",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.uebermensch.app"
+      "bundleIdentifier": "com.aretune.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.uebermensch.app",
+      "package": "com.aretune.app",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -43,15 +43,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "UEBERMENSCH.AI benötigt Zugriff auf deine Fotos, damit du ein Profilbild auswählen kannst.",
+          "photosPermission": "ARETUNE benötigt Zugriff auf deine Fotos, damit du ein Profilbild auswählen kannst.",
           "cameraPermission": false,
           "microphonePermission": false
         }
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "baseUrl": "/app"
+      "typedRoutes": true
     }
   }
 }

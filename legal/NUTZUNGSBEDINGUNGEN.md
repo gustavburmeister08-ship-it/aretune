@@ -1,14 +1,14 @@
-# Nutzungsbedingungen für UEBERMENSCH.AI
+# Nutzungsbedingungen für ARETUNE
 
 Stand: 14. Juli 2026 · Version 2026-07-14-integrations-v1
 
 ## 1. Anbieter und Geltung
 
-Anbieter ist Gustav Burmeister, **[VOLLSTÄNDIGE LADUNGSFÄHIGE ANSCHRIFT]**, E-Mail **support@uebermensch.ai – bestätigen**. Diese Bedingungen gelten für die Nutzung von UEBERMENSCH.AI durch volljährige Verbraucher und Unternehmer.
+Anbieter ist Gustav Burmeister, **[VOLLSTÄNDIGE LADUNGSFÄHIGE ANSCHRIFT]**, E-Mail **support@aretune.com – bestätigen**. Diese Bedingungen gelten für die Nutzung von ARETUNE durch volljährige Verbraucher und Unternehmer.
 
 ## 2. Leistungsgegenstand
 
-UEBERMENSCH.AI stellt Funktionen für Selbstreflexion, persönliche Metriken, deterministische Scores und – nach gesonderter Einwilligung – KI-generierte Direktiven und Wochenzusammenfassungen bereit. Funktionsumfang und Verfügbarkeit können während der Alpha- und Beta-Phase verändert werden.
+ARETUNE stellt Funktionen für Selbstreflexion, persönliche Metriken, deterministische Scores und – nach gesonderter Einwilligung – KI-generierte Direktiven und Wochenzusammenfassungen bereit. Funktionsumfang und Verfügbarkeit können während der Alpha- und Beta-Phase verändert werden.
 
 Optional können Nutzer Trackingquellen verbinden oder eigene CSV-/JSON-Dateien importieren. Verfügbarkeit, Umfang, Aktualität und Genauigkeit externer Daten hängen vom jeweiligen Anbieter, seinen Berechtigungen und technischen Schnittstellen ab. Nutzer dürfen nur eigene Daten oder Daten importieren, zu deren Verarbeitung sie berechtigt sind. Quellen können jederzeit getrennt werden. Externe medizinische Messwerte dienen ausschließlich der persönlichen Dokumentation und werden nicht diagnostisch bewertet.
 

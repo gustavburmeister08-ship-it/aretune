@@ -1,9 +1,9 @@
-# UEBERMENSCH.AI
+# Aretune
 
-UEBERMENSCH.AI is an Expo/React Native application with a Fastify API and
-Supabase backend. This directory is the canonical product codebase. The sibling
-directories `../uebermensch-app` and `../uebermensch-api` are retained only as
-legacy snapshots until they can be archived safely.
+Aretune is an Expo/React Native application with a Fastify API and Supabase
+backend. This directory is the canonical product codebase. See
+[`../README.md`](../README.md) for the project-wide overview (website,
+Cloudflare projects, CRM link).
 
 ## Product loop
 

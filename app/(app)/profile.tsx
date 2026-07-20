@@ -116,7 +116,7 @@ export default function Profile() {
           {[
             { label: 'Connected Tracking Apps', icon: '⌁', onPress: () => router.push('/(app)/integrations' as never) },
             { label: 'Privacy & Data', icon: '🔒', onPress: () => router.push('/(app)/privacy' as never) },
-            { label: 'About UEBERMENSCH.AI', icon: 'ⓘ', onPress: () => Alert.alert('UEBERMENSCH.AI', 'Six pillars. One daily action. Honest weekly progress.') },
+            { label: 'About ARETUNE', icon: 'ⓘ', onPress: () => Alert.alert('ARETUNE', 'Six pillars. One daily action. Honest weekly progress.') },
           ].map((item, index, items) => (
             <TouchableOpacity key={item.label} onPress={item.onPress} className="flex-row items-center px-5 py-4" style={{ borderBottomWidth: index < items.length - 1 ? 1 : 0, borderBottomColor: '#2A2A2A' }}>
               <Text className="mr-3" style={{ fontSize: 16 }}>{item.icon}</Text>

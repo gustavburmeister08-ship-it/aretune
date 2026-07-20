@@ -5,9 +5,9 @@ export const AI_NOTICE_VERSION = '2026-07-14';
 export const LEGAL_TEXTS = {
   privacy: {
     title: 'Datenschutzerklärung',
-    content: `Verantwortlicher: Gustav Burmeister, [LADUNGSFÄHIGE ANSCHRIFT], privacy@uebermensch.ai.
+    content: `Verantwortlicher: Gustav Burmeister, [LADUNGSFÄHIGE ANSCHRIFT], privacy@aretune.com.
 
-UEBERMENSCH.AI verarbeitet Konto- und Profildaten, freiwillige Social-Profilangaben, Posts, Bilder, Likes, Kommentare, Meldungen und private Nachrichten, außerdem Onboarding-Antworten, Check-ins, detaillierte Kategorie-Metriken und Notizen, Scores, Direktiven, Audits, Einwilligungsnachweise und technische Produkt-Events. Bei aktiviertem Community-Profil sind Name, Beschreibung, Profilbild, externe Profillinks und veröffentlichte Beiträge für angemeldete Community-Mitglieder sichtbar; veröffentlichte Medien werden über öffentlich abrufbare, schwer erratbare URLs bereitgestellt. Private Nachrichten sind nur für die Gesprächsteilnehmer lesbar. Kategorie-Metriken bleiben kontobezogen geschützt und sind keine öffentlichen Profildaten.
+ARETUNE verarbeitet Konto- und Profildaten, freiwillige Social-Profilangaben, Posts, Bilder, Likes, Kommentare, Meldungen und private Nachrichten, außerdem Onboarding-Antworten, Check-ins, detaillierte Kategorie-Metriken und Notizen, Scores, Direktiven, Audits, Einwilligungsnachweise und technische Produkt-Events. Bei aktiviertem Community-Profil sind Name, Beschreibung, Profilbild, externe Profillinks und veröffentlichte Beiträge für angemeldete Community-Mitglieder sichtbar; veröffentlichte Medien werden über öffentlich abrufbare, schwer erratbare URLs bereitgestellt. Private Nachrichten sind nur für die Gesprächsteilnehmer lesbar. Kategorie-Metriken bleiben kontobezogen geschützt und sind keine öffentlichen Profildaten.
 
 Optional kannst du Trackingquellen verbinden oder CSV-/JSON-Dateien importieren. Dabei verarbeiten wir die von dir ausgewählten Aktivitäts-, Schlaf-, Ernährungs-, Achtsamkeits-, Stimmungs-, Körper- und gegebenenfalls medizinischen Messwerte, Quellenkennungen, Synchronisationszeiten sowie technische Fehler. OAuth-Zugangs- und Aktualisierungstoken werden serverseitig verschlüsselt gespeichert, niemals im Profil angezeigt und beim Trennen oder bei der Kontolöschung gelöscht. Gerätedaten von Apple Health, Android Health Connect und Samsung Health erfordern gesonderte Betriebssystemberechtigungen. Medizinische Rohwerte werden nicht automatisch diagnostisch bewertet. Du kannst Verbindungen einzeln widerrufen; Importdaten sind Bestandteil des Datenexports.
 
@@ -21,9 +21,9 @@ Die vollständige, veröffentlichungsfähige Fassung befindet sich im Projekt un
   },
   terms: {
     title: 'Nutzungsbedingungen',
-    content: `Anbieter: Gustav Burmeister, [LADUNGSFÄHIGE ANSCHRIFT], support@uebermensch.ai.
+    content: `Anbieter: Gustav Burmeister, [LADUNGSFÄHIGE ANSCHRIFT], support@aretune.com.
 
-UEBERMENSCH.AI ist ein Selbstreflexions-, Tracking- und Coaching-Werkzeug für volljährige Nutzer. Der Dienst ist kein Medizinprodukt und ersetzt keine ärztliche, psychotherapeutische, rechtliche oder finanzielle Beratung. KI-Ausgaben können falsch, unvollständig oder ungeeignet sein und müssen eigenverantwortlich geprüft werden.
+ARETUNE ist ein Selbstreflexions-, Tracking- und Coaching-Werkzeug für volljährige Nutzer. Der Dienst ist kein Medizinprodukt und ersetzt keine ärztliche, psychotherapeutische, rechtliche oder finanzielle Beratung. KI-Ausgaben können falsch, unvollständig oder ungeeignet sein und müssen eigenverantwortlich geprüft werden.
 
 Du bist für richtige Kontodaten, die Sicherheit deiner Zugangsdaten und die Rechtmäßigkeit deiner Eingaben verantwortlich. Unzulässig sind rechtswidrige Nutzung, Missbrauch, Umgehung technischer Schutzmaßnahmen und die Eingabe personenbezogener Daten Dritter ohne Rechtsgrundlage.
 

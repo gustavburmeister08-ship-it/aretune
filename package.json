@@ -1,5 +1,5 @@
 {
-  "name": "uebermensch-app",
+  "name": "aretune-app",
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
@@ -11,9 +11,8 @@
     "api": "npm run dev --prefix api",
     "api:build": "npm run build --prefix api",
     "export:web": "expo export --platform web",
-    "build:pages": "powershell -ExecutionPolicy Bypass -File scripts/build-app-bundle.ps1",
-    "deploy:test": "npm run build:pages && wrangler pages deploy .tmp-pages-bundle --project-name app-uebermensch-ai --branch preview",
-    "deploy:live": "npm run build:pages && wrangler pages deploy .tmp-pages-bundle --project-name app-uebermensch-ai --branch main",
+    "deploy:test": "npm run export:web && wrangler pages deploy dist --project-name app-aretune --branch preview",
+    "deploy:live": "npm run export:web && wrangler pages deploy dist --project-name app-aretune --branch main",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:catalog && npm run test --prefix api",
     "test:catalog": "node api/node_modules/tsx/dist/cli.mjs --test lib/*.test.ts lib/integrations/*.test.ts"

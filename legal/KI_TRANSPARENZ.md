@@ -2,7 +2,7 @@
 
 Stand: 14. Juli 2026 · Version 2026-07-14
 
-UEBERMENSCH.AI nutzt generative KI für tägliche Direktiven und textliche Wochenzusammenfassungen. Nutzer werden vor Aktivierung und an den jeweiligen Ausgaben darüber informiert, dass sie mit einem KI-System interagieren bzw. KI-generierte Inhalte sehen.
+ARETUNE nutzt generative KI für tägliche Direktiven und textliche Wochenzusammenfassungen. Nutzer werden vor Aktivierung und an den jeweiligen Ausgaben darüber informiert, dass sie mit einem KI-System interagieren bzw. KI-generierte Inhalte sehen.
 
 In der Cloudflare-Pages-Bereitstellung werden diese Inhalte mit Cloudflare Workers AI erzeugt. Andere serverseitige Bereitstellungen können alternativ einen in der Datenschutzerklärung genannten KI-API-Anbieter verwenden.
 

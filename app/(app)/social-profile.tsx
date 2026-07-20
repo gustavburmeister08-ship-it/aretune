@@ -144,7 +144,7 @@ export default function SocialProfileEditor() {
                   accessibilityLabel="Username"
                 />
               </View>
-              <Text className="text-white/30 text-xs mt-2">Your unique UEBERMENSCH.AI handle. Changing it releases the old username.</Text>
+              <Text className="text-white/30 text-xs mt-2">Your unique ARETUNE handle. Changing it releases the old username.</Text>
             </View>
 
             <View className="items-center">

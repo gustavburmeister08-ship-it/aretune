@@ -11,7 +11,7 @@ export default function Welcome() {
         {/* Top wordmark */}
         <View>
           <Text className="text-gold text-sm tracking-[6px] uppercase font-bold">
-            Uebermensch
+            Aretune
           </Text>
         </View>
 

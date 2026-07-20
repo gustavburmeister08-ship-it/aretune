@@ -1,4 +1,4 @@
-# Datenschutzerklärung für UEBERMENSCH.AI
+# Datenschutzerklärung für ARETUNE
 
 Stand: 14. Juli 2026 · Version 2026-07-14-integrations-v1
 
@@ -7,11 +7,11 @@ Stand: 14. Juli 2026 · Version 2026-07-14-integrations-v1
 Gustav Burmeister  
 **[LADUNGSFÄHIGE STRASSE UND HAUSNUMMER]**  
 **[PLZ ORT]**, Deutschland  
-E-Mail: **privacy@uebermensch.ai – vor Veröffentlichung Funktionsfähigkeit bestätigen**
+E-Mail: **privacy@aretune.com – vor Veröffentlichung Funktionsfähigkeit bestätigen**
 
 ## 2. Gegenstand und Grundsätze
 
-UEBERMENSCH.AI ist eine Tracking-, Reflexions- und KI-Coaching-Anwendung. Wir verarbeiten nur Daten, die für Konto, Tracking, Scoring, optionale KI-Funktionen, Sicherheit und Verbesserung des Dienstes erforderlich sind. Freitext-Notizen werden derzeit gespeichert, aber nicht an den KI-Anbieter übermittelt.
+ARETUNE ist eine Tracking-, Reflexions- und KI-Coaching-Anwendung. Wir verarbeiten nur Daten, die für Konto, Tracking, Scoring, optionale KI-Funktionen, Sicherheit und Verbesserung des Dienstes erforderlich sind. Freitext-Notizen werden derzeit gespeichert, aber nicht an den KI-Anbieter übermittelt.
 
 ## 3. Verarbeitungen, Zwecke und Rechtsgrundlagen
 
@@ -35,7 +35,7 @@ Nutzer können freiwillig externe Trackingquellen verbinden oder lokale CSV-/JSO
 
 Bei OAuth-Verbindungen werden Zugangs- und Aktualisierungstoken ausschließlich serverseitig verschlüsselt gespeichert. Sie werden nicht in der App angezeigt, nicht in Datenexporte aufgenommen und bei Trennung der Quelle oder Kontolöschung gelöscht. Betriebssystemquellen wie Apple HealthKit, Android Health Connect oder Samsung Health erfordern zusätzliche, granular erteilte Geräteberechtigungen. Partnerquellen können eine Freigabe des jeweiligen Anbieters verlangen. Eine Trennung beendet künftige Synchronisationen; bereits abgeleitete private Kategorie-Einträge können im Tracker separat gelöscht werden.
 
-Besonders sensible und medizinische Rohwerte bleiben kontobezogen geschützt, werden nicht im Community-Profil veröffentlicht und nicht automatisch diagnostisch interpretiert oder in eine medizinische Empfehlung umgewandelt. UEBERMENSCH.AI ist kein Medizinprodukt. Bei Gesundheitsfragen sind qualifizierte Fachpersonen heranzuziehen. Soweit besondere Kategorien personenbezogener Daten im Sinne des Art. 9 DSGVO betroffen sind, erfolgt ihre freiwillige Bereitstellung und Verarbeitung auf Grundlage der ausdrücklichen Handlung und Einwilligung des Nutzers gemäß Art. 9 Abs. 2 lit. a DSGVO; eine erteilte Quellenberechtigung kann jederzeit widerrufen werden.
+Besonders sensible und medizinische Rohwerte bleiben kontobezogen geschützt, werden nicht im Community-Profil veröffentlicht und nicht automatisch diagnostisch interpretiert oder in eine medizinische Empfehlung umgewandelt. ARETUNE ist kein Medizinprodukt. Bei Gesundheitsfragen sind qualifizierte Fachpersonen heranzuziehen. Soweit besondere Kategorien personenbezogener Daten im Sinne des Art. 9 DSGVO betroffen sind, erfolgt ihre freiwillige Bereitstellung und Verarbeitung auf Grundlage der ausdrücklichen Handlung und Einwilligung des Nutzers gemäß Art. 9 Abs. 2 lit. a DSGVO; eine erteilte Quellenberechtigung kann jederzeit widerrufen werden.
 
 ### Optionale KI-Direktiven und KI-Wochenberichte
 

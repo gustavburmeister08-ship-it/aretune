@@ -1,8 +1,8 @@
-# UEBERMENSCH.AI Alpha Product Specification
+# Aretune Alpha Product Specification
 
 ## Product promise
 
-UEBERMENSCH.AI turns a short daily reflection into one concrete next action and
+Aretune turns a short daily reflection into one concrete next action and
 uses the resulting behavior to produce an honest weekly review.
 
 ## Canonical domain
@@ -51,7 +51,7 @@ Deferred until retention is proven:
 
 ## Score contract
 
-Each pillar score is 0-100. The total UEBERMENSCH score is 0-600.
+Each pillar score is 0-100. The total Aretune score is 0-600.
 
 Category Score v2 combines Performance (40%) and Lifestyle (60%). Lifestyle uses:
 

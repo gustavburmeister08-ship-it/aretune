@@ -8,7 +8,7 @@ Gustav Burmeister
 Deutschland
 
 Kontakt:  
-E-Mail: **support@uebermensch.ai – vor Veröffentlichung Funktionsfähigkeit bestätigen**
+E-Mail: **support@aretune.com – vor Veröffentlichung Funktionsfähigkeit bestätigen**
 
 Verantwortlich für redaktionelle Inhalte: Gustav Burmeister, Anschrift wie oben.
 

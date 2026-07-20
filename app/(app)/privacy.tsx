@@ -17,7 +17,7 @@ export default function PrivacyScreen() {
     setBusy(true);
     try {
       const data = await exportAccountData(user.id);
-      await Share.share({ message: JSON.stringify(data, null, 2), title: 'UEBERMENSCH.AI data export' });
+      await Share.share({ message: JSON.stringify(data, null, 2), title: 'ARETUNE data export' });
     } catch (error) {
       Alert.alert('Export failed', error instanceof Error ? error.message : 'Please try again.');
     } finally {
