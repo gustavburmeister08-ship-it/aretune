@@ -15,13 +15,12 @@ module.exports = {
           dark: '#A07830',
         },
         // Pillar colors
-        mind: '#6C63FF',
-        emotion: '#FF6584',
         body: '#43D9AD',
+        mind: '#6C63FF',
+        spirit: '#C9A84C',
         relationships: '#FF9A3C',
         vocation: '#3C9EFF',
-        wealth: '#A8FF78',
-        adventure: '#FF6B6B',
+        lore: '#FF6B6B',
         // Neutrals
         surface: {
           DEFAULT: '#111111',

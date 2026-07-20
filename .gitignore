@@ -5,8 +5,12 @@ node_modules/
 
 # Expo
 .expo/
+.wrangler/
+.expo-preview.*.log
 dist/
 web-build/
+.tmp-web-export/
+.tmp-functions-build/
 expo-env.d.ts
 
 # Native

@@ -39,10 +39,19 @@
         {
           "fonts": []
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "UEBERMENSCH.AI benötigt Zugriff auf deine Fotos, damit du ein Profilbild auswählen kannst.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/app"
     }
   }
 }
