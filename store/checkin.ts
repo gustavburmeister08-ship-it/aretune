@@ -23,7 +23,7 @@ interface CheckInState {
   setStep: (step: number) => void;
   reset: () => void;
 
-  submitCheckIn: (userId: string) => Promise<void>;
+  submitCheckIn: (userId: string) => Promise<CheckIn>;
   loadRecentCheckIns: (userId: string) => Promise<void>;
   loadTodaysCheckIn: (userId: string) => Promise<void>;
 }
@@ -57,40 +57,40 @@ export const useCheckInStore = create<CheckInState>((set, get) => ({
 
     const now = new Date().toISOString();
 
-    // Insert check-in record
-    const { data: checkIn, error: checkInError } = await supabase
-      .from('check_ins')
-      .insert({
-        user_id: userId,
-        mood: currentMood,
-        energy_level: currentEnergy,
-        note: currentNote || null,
-        completed_at: now,
-      })
-      .select()
-      .single();
+    const { data: checkInId, error: checkInError } = await supabase.rpc('submit_check_in', {
+      p_user_id: userId,
+      p_mood: currentMood,
+      p_energy: currentEnergy,
+      p_note: currentNote || null,
+      p_completed_at: now,
+      p_entries: currentEntries,
+    });
 
-    if (checkInError || !checkIn) {
+    if (checkInError || !checkInId) {
       set({ loading: false });
       throw new Error(checkInError?.message ?? 'Failed to save check-in');
     }
 
-    // Insert metric entries
-    const metricRows = Object.entries(currentEntries).map(([metricId, value]) => ({
-      check_in_id: checkIn.id,
-      user_id: userId,
-      metric_id: metricId,
-      value: value as number,
-      logged_at: now,
-    }));
+    const completed: CheckIn = {
+      id: checkInId,
+      userId,
+      mood: currentMood,
+      energyLevel: currentEnergy,
+      note: currentNote || undefined,
+      completedAt: now,
+      entries: Object.entries(currentEntries).map(([metricId, value]) => ({
+        id: `${checkInId}:${metricId}`,
+        metricId,
+        userId,
+        value: value as number,
+        loggedAt: now,
+      })),
+    };
 
-    if (metricRows.length > 0) {
-      await supabase.from('metric_entries').insert(metricRows);
-    }
-
-    set({ loading: false });
+    set({ loading: false, todaysCheckIn: completed });
     get().reset();
-    await get().loadTodaysCheckIn(userId);
+    await get().loadRecentCheckIns(userId);
+    return completed;
   },
 
   loadRecentCheckIns: async (userId: string) => {
@@ -136,17 +136,18 @@ export const useCheckInStore = create<CheckInState>((set, get) => ({
       .gte('completed_at', today.toISOString())
       .order('completed_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (data) {
+      const row = data as any;
       const checkIn: CheckIn = {
-        id: data.id,
-        userId: data.user_id,
-        mood: data.mood,
-        energyLevel: data.energy_level,
-        note: data.note,
-        completedAt: data.completed_at,
-        entries: (data.metric_entries ?? []).map((me: any) => ({
+        id: row.id,
+        userId: row.user_id,
+        mood: row.mood,
+        energyLevel: row.energy_level,
+        note: row.note ?? undefined,
+        completedAt: row.completed_at,
+        entries: (row.metric_entries ?? []).map((me: any) => ({
           id: me.id,
           metricId: me.metric_id,
           userId: me.user_id,
@@ -156,6 +157,8 @@ export const useCheckInStore = create<CheckInState>((set, get) => ({
         })),
       };
       set({ todaysCheckIn: checkIn });
+    } else {
+      set({ todaysCheckIn: null });
     }
   },
 }));

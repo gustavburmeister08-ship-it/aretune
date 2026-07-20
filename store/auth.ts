@@ -24,7 +24,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialized: false,
 
   setSession: (session) => {
-    set({ session, user: session?.user ?? null });
+    set({
+      session,
+      user: session?.user ?? null,
+      profile: session ? get().profile : null,
+      initialized: !session,
+    });
     if (session?.user) {
       get().loadProfile(session.user.id);
     }
@@ -49,6 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const profile: UserProfile = {
         id: data.id,
         email: data.email,
+        username: data.username ?? undefined,
         displayName: data.display_name ?? undefined,
         phase: data.phase,
         level: data.level,
@@ -56,7 +62,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         onboardingComplete: data.onboarding_complete,
         subscriptionTier: data.subscription_tier,
         createdAt: data.created_at,
-        pillarScores: data.pillar_scores ?? {},
+        pillarScores: (data.pillar_scores ?? {}) as UserProfile['pillarScores'],
+        legalConsentComplete: data.legal_consent_complete,
+        aiProcessingConsent: data.ai_processing_consent,
+        termsVersion: data.terms_version ?? undefined,
+        privacyVersion: data.privacy_version ?? undefined,
       };
       set({ profile, initialized: true });
     } else {
