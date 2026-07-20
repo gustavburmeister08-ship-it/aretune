@@ -63,6 +63,14 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
+        name="social"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="◎" label="Social" focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           tabBarIcon: ({ focused }) => (
@@ -70,6 +78,15 @@ export default function AppLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="privacy" options={{ href: null }} />
+      <Tabs.Screen name="integrations" options={{ href: null }} />
+      <Tabs.Screen name="category/[categoryId]" options={{ href: null }} />
+      <Tabs.Screen name="social-profile" options={{ href: null }} />
+      <Tabs.Screen name="profile/[userId]" options={{ href: null }} />
+      <Tabs.Screen name="messages" options={{ href: null }} />
+      <Tabs.Screen name="new-message" options={{ href: null }} />
+      <Tabs.Screen name="post/[postId]" options={{ href: null }} />
+      <Tabs.Screen name="chat/[conversationId]" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -1,18 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/auth';
-import { PILLARS } from '../lib/pillars';
-import type { Phase, PillarId, OnboardingAnswer } from '../types';
+import { calculateOnboardingResult, detectPhase } from '../lib/onboarding';
+import { trackEvent } from '../lib/analytics';
+import { claimUsername, isUsernameAvailable, normalizeUsernameInput, usernameValidationError } from '../lib/username';
+import type { OnboardingAnswer, OnboardingResult } from '../types';
+import type { Json } from '../types/database';
 
 // 12 questions to detect phase and pillar priorities
 const QUESTIONS = [
@@ -78,48 +83,37 @@ const QUESTIONS = [
   },
 ];
 
-function detectPhase(answers: OnboardingAnswer[]): Phase {
-  // Score: 0=very bad, 1=bad, 2=ok, 3=good
-  const scores = answers.map((a) => Number(a.answer));
-  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-
-  if (avg < 1.2) return 'dissonance';
-  if (avg < 2.2) return 'uncertainty';
-  return 'discovery';
-}
-
-function detectTopPillars(answers: OnboardingAnswer[]): PillarId[] {
-  // q9 and q10 directly tell us broken areas
-  const q9 = Number(answers.find((a) => a.questionId === 'q9')?.answer ?? 3);
-  const q10 = Number(answers.find((a) => a.questionId === 'q10')?.answer ?? 3);
-
-  const pillarsByScore: Record<string, number> = {
-    body: Number(answers.find((a) => a.questionId === 'q2')?.answer ?? 3),
-    mind: Number(answers.find((a) => a.questionId === 'q8')?.answer ?? 3),
-    vocation: Number(answers.find((a) => a.questionId === 'q3')?.answer ?? 3),
-    relationships: Number(answers.find((a) => a.questionId === 'q4')?.answer ?? 3),
-    emotion: Number(answers.find((a) => a.questionId === 'q5')?.answer ?? 3),
-    wealth: Number(answers.find((a) => a.questionId === 'q6')?.answer ?? 3),
-    adventure: Number(answers.find((a) => a.questionId === 'q7')?.answer ?? 3),
-  };
-
-  // Sort ascending (lowest score = weakest = prioritized first)
-  return Object.entries(pillarsByScore)
-    .sort(([, a], [, b]) => a - b)
-    .map(([id]) => id) as PillarId[];
-}
-
 export default function Onboarding() {
   const router = useRouter();
   const { user, loadProfile } = useAuthStore();
-  const [step, setStep] = useState(0); // 0 = intro, 1-12 = questions, 13 = done
+  const [step, setStep] = useState(-1); // -1 = intro, 0 = username, 1-12 = questions, 13 = done
+  const [username, setUsername] = useState('');
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [answers, setAnswers] = useState<OnboardingAnswer[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<OnboardingResult | null>(null);
 
-  const isIntro = step === 0;
+  const isIntro = step === -1;
+  const isUsername = step === 0;
   const isDone = step > QUESTIONS.length;
-  const question = QUESTIONS[step - 1];
+  const question = QUESTIONS[Math.max(0, step - 1)];
+
+  useEffect(() => {
+    if (!isUsername) return;
+    const validationError = usernameValidationError(username);
+    if (validationError) {
+      setUsernameStatus('idle');
+      return;
+    }
+    setUsernameStatus('checking');
+    const timer = setTimeout(() => {
+      isUsernameAvailable(username)
+        .then((available) => setUsernameStatus(available ? 'available' : 'taken'))
+        .catch(() => setUsernameStatus('idle'));
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [isUsername, username]);
 
   const handleAnswer = (index: number) => {
     setSelectedOption(index);
@@ -128,7 +122,26 @@ export default function Onboarding() {
 
   const handleNext = async () => {
     if (isIntro) {
-      setStep(1);
+      setStep(0);
+      return;
+    }
+
+    if (isUsername) {
+      const validationError = usernameValidationError(username);
+      if (validationError) {
+        Alert.alert('Choose another username', validationError);
+        return;
+      }
+      setUsernameStatus('checking');
+      try {
+        const available = await isUsernameAvailable(username);
+        setUsernameStatus(available ? 'available' : 'taken');
+        if (!available) return;
+        setStep(1);
+      } catch {
+        setUsernameStatus('idle');
+        Alert.alert('Could not check username', 'Please try again.');
+      }
       return;
     }
 
@@ -144,8 +157,12 @@ export default function Onboarding() {
     if (step < QUESTIONS.length) {
       setStep(step + 1);
     } else {
-      // Final step — compute results and save
-      await finishOnboarding(newAnswers);
+      try {
+        await finishOnboarding(newAnswers);
+      } catch (error) {
+        setSaving(false);
+        Alert.alert('Could not save onboarding', error instanceof Error ? error.message : 'Please try again.');
+      }
     }
   };
 
@@ -153,23 +170,13 @@ export default function Onboarding() {
     if (!user?.id) return;
     setSaving(true);
 
-    const phase = detectPhase(finalAnswers);
-    const topPillars = detectTopPillars(finalAnswers);
-    const activePillars = topPillars; // all 7, but ranked
+    const onboardingResult = calculateOnboardingResult(finalAnswers);
+    const { phase, topPillars: activePillars, initialScores: pillarScores } = onboardingResult;
 
-    // Initial scores from answers (scale 0-3 → 0-10)
-    const pillarScores: Record<string, number> = {};
-    activePillars.forEach((pillarId, i) => {
-      // Rough initial score from question responses
-      pillarScores[pillarId] = Math.round(
-        (finalAnswers.find((a) =>
-          ['q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'].includes(a.questionId)
-        )?.answer as number ?? 1) * 3.33
-      );
-    });
+    await claimUsername(username);
 
     // Save profile
-    await supabase.from('profiles').upsert({
+    const { error: profileError } = await supabase.from('profiles').upsert({
       id: user.id,
       email: user.email!,
       phase,
@@ -177,8 +184,14 @@ export default function Onboarding() {
       active_pillars: activePillars,
       onboarding_complete: true,
       subscription_tier: 'free',
-      pillar_scores: pillarScores,
     });
+    if (profileError) throw profileError;
+
+    const { error: scoresError } = await supabase.rpc('set_pillar_scores', {
+      p_user_id: user.id,
+      p_pillar_scores: pillarScores as unknown as Json,
+    });
+    if (scoresError) throw scoresError;
 
     // Save answers
     const answerRows = finalAnswers.map((a) => ({
@@ -186,15 +199,20 @@ export default function Onboarding() {
       question_id: a.questionId,
       answer: String(a.answer),
     }));
-    await supabase.from('onboarding_answers').insert(answerRows);
+    const { error: answersError } = await supabase
+      .from('onboarding_answers')
+      .upsert(answerRows, { onConflict: 'user_id,question_id' });
+    if (answersError) throw answersError;
 
     await loadProfile(user.id);
+    void trackEvent(user.id, 'onboarding_completed', { phase, active_pillars: activePillars });
+    setResult(onboardingResult);
     setSaving(false);
     setStep(QUESTIONS.length + 1);
   };
 
   if (isDone) {
-    const phase = detectPhase(answers);
+    const phase = result?.phase ?? detectPhase(answers);
     return (
       <SafeAreaView className="flex-1 bg-surface items-center justify-center px-8">
         <Text className="text-5xl mb-6">⚡</Text>
@@ -230,7 +248,7 @@ export default function Onboarding() {
   return (
     <SafeAreaView className="flex-1 bg-surface">
       {/* Progress */}
-      {!isIntro && (
+      {!isIntro && !isUsername && (
         <View className="h-1 bg-surface-border mx-6 mt-4 rounded-full">
           <View
             className="h-1 bg-gold rounded-full"
@@ -265,6 +283,44 @@ export default function Onboarding() {
               onPress={handleNext}
             >
               <Text className="text-surface font-bold text-base">Start Assessment</Text>
+            </TouchableOpacity>
+          </View>
+        ) : isUsername ? (
+          <View className="flex-1 justify-between">
+            <View className="gap-6 mt-8">
+              <Text className="text-gold text-xs tracking-[6px] uppercase">Claim your identity</Text>
+              <Text className="text-white text-3xl font-bold leading-tight">Choose your{`\n`}username.</Text>
+              <Text className="text-white/50 text-base leading-relaxed">
+                This is your unique public handle, like on Instagram or X. You can change it later in your profile.
+              </Text>
+              <View>
+                <View className="bg-surface-raised border border-surface-border rounded-2xl px-4 flex-row items-center">
+                  <Text className="text-gold text-lg font-bold">@</Text>
+                  <TextInput
+                    className="flex-1 text-white text-lg py-4 ml-1"
+                    placeholder="username"
+                    placeholderTextColor="#555"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    maxLength={30}
+                    value={username}
+                    onChangeText={(value) => setUsername(normalizeUsernameInput(value))}
+                    accessibilityLabel="Username"
+                  />
+                </View>
+                <Text className="text-white/30 text-xs mt-3">3–30 characters · letters, numbers, _ and .</Text>
+                {usernameStatus === 'checking' && <Text className="text-white/40 text-sm mt-3">Checking availability…</Text>}
+                {usernameStatus === 'available' && <Text className="text-emerald-400 text-sm mt-3">@{username} is available.</Text>}
+                {usernameStatus === 'taken' && <Text className="text-red-400 text-sm mt-3">@{username} is already taken.</Text>}
+              </View>
+            </View>
+            <TouchableOpacity
+              className="bg-gold rounded-2xl py-4 items-center mt-10"
+              onPress={handleNext}
+              disabled={usernameStatus !== 'available'}
+              style={{ opacity: usernameStatus === 'available' ? 1 : 0.35 }}
+            >
+              <Text className="text-surface font-bold text-base">Continue →</Text>
             </TouchableOpacity>
           </View>
         ) : (

@@ -12,7 +12,10 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuthStore } from '../../store/auth';
 import { useCheckInStore } from '../../store/checkin';
+import { useDirectiveStore } from '../../store/directive';
 import { PILLARS } from '../../lib/pillars';
+import { persistLifestyleScores } from '../../lib/score-service';
+import { trackEvent } from '../../lib/analytics';
 import type { MetricDefinition, MetricType } from '../../types';
 
 // We only show leading metrics for active pillars during daily check-in
@@ -172,8 +175,9 @@ function MetricInput({
 
 export default function CheckIn() {
   const router = useRouter();
-  const { profile } = useAuthStore();
-  const { currentEntries, currentMood, currentEnergy, currentNote, setMetricValue, setMood, setEnergy, setNote, submitCheckIn, loading } = useCheckInStore();
+  const { profile, loadProfile } = useAuthStore();
+  const { currentEntries, currentMood, currentEnergy, currentNote, recentCheckIns, setMetricValue, setMood, setEnergy, setNote, submitCheckIn, loading } = useCheckInStore();
+  const { todayDirective, generateForCheckIn, loading: directiveLoading, error: directiveError } = useDirectiveStore();
 
   const [step, setStep] = useState<Step>('vitals');
 
@@ -186,9 +190,22 @@ export default function CheckIn() {
   const handleSubmit = async () => {
     if (!profile?.id) return;
     try {
-      await submitCheckIn(profile.id);
+      const completed = await submitCheckIn(profile.id);
+      void trackEvent(profile.id, 'check_in_completed', { metric_count: completed.entries.length });
+      const scoringInputs = [completed, ...recentCheckIns.filter((item) => item.id !== completed.id)];
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setStep('done');
+      void (async () => {
+        let directiveProfile = profile;
+        try {
+          const pillarScores = await persistLifestyleScores(profile.id, profile.activePillars, scoringInputs);
+          directiveProfile = { ...profile, pillarScores };
+          await loadProfile(profile.id);
+        } catch {
+          // The check-in remains valid if score persistence needs a later retry.
+        }
+        await generateForCheckIn(directiveProfile, scoringInputs).catch(() => undefined);
+      })();
     } catch (e) {
       Alert.alert('Error', 'Failed to save check-in. Try again.');
     }
@@ -201,9 +218,18 @@ export default function CheckIn() {
         <Text className="text-white text-2xl font-bold text-center mb-3">
           Check-in complete.
         </Text>
-        <Text className="text-white/50 text-base text-center mb-10">
-          Your directive is being generated based on today's data.
-        </Text>
+        {todayDirective ? (
+          <View className="bg-surface-raised rounded-2xl p-5 w-full mb-8">
+            <Text className="text-gold text-xs tracking-widest uppercase mb-2">{todayDirective.pillar} · AI-generated</Text>
+            <Text className="text-white text-xl font-bold mb-3">{todayDirective.title}</Text>
+            <Text className="text-white/70 text-sm leading-relaxed mb-4">{todayDirective.body}</Text>
+            <Text className="text-white font-semibold">{todayDirective.action}</Text>
+          </View>
+        ) : (
+          <Text className="text-white/50 text-base text-center mb-10">
+            {directiveLoading ? 'Generating your directive...' : directiveError ?? 'Your check-in is saved. Generate the directive again from Today.'}
+          </Text>
+        )}
         <TouchableOpacity
           className="bg-gold rounded-2xl py-4 px-10"
           onPress={() => { router.push('/(app)'); setStep('vitals'); }}

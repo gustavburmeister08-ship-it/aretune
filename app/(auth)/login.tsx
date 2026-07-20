@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,20 +16,25 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLogin = async () => {
     if (!email || !password) return;
+    setErrorMessage(null);
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
 
     if (error) {
-      Alert.alert('Error', error.message);
+      setErrorMessage(error.message);
       setLoading(false);
       return;
     }
 
-    router.replace('/(app)');
+    router.replace('/');
     setLoading(false);
   };
 
@@ -79,17 +83,20 @@ export default function Login() {
           </View>
 
           {/* Submit */}
-          <TouchableOpacity
-            className="bg-gold rounded-2xl py-4 items-center"
-            onPress={handleLogin}
-            disabled={loading || !email || !password}
-            activeOpacity={0.85}
-            style={{ opacity: loading || !email || !password ? 0.5 : 1 }}
-          >
-            <Text className="text-surface font-bold text-base tracking-wide">
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Text>
-          </TouchableOpacity>
+          <View className="gap-3">
+            {errorMessage ? <Text className="text-red-400 text-sm text-center">{errorMessage}</Text> : null}
+            <TouchableOpacity
+              className="bg-gold rounded-2xl py-4 items-center"
+              onPress={handleLogin}
+              disabled={loading || !email || !password}
+              activeOpacity={0.85}
+              style={{ opacity: loading || !email || !password ? 0.5 : 1 }}
+            >
+              <Text className="text-surface font-bold text-base tracking-wide">
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

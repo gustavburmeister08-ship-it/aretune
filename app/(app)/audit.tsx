@@ -1,19 +1,11 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/auth';
 import { supabase } from '../../lib/supabase';
 import { PILLAR_MAP, PILLARS } from '../../lib/pillars';
 import type { WeeklyAudit } from '../../types';
-
-function getWeekStart(): Date {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
+import { generateAndPersistWeeklyAudit, getWeekStart } from '../../lib/audit';
 
 export default function AuditScreen() {
   const { profile } = useAuthStore();
@@ -33,14 +25,14 @@ export default function AuditScreen() {
       .select('*')
       .eq('user_id', userId)
       .eq('week_start', weekStart)
-      .single();
+      .maybeSingle();
 
     if (data) {
       setAudit({
         id: data.id,
         userId: data.user_id,
         weekStart: data.week_start,
-        pillarScores: data.pillar_scores ?? {},
+        pillarScores: (data.pillar_scores ?? {}) as WeeklyAudit['pillarScores'],
         highlights: data.highlights ?? [],
         gaps: data.gaps ?? [],
         directiveCompletion: data.directive_completion ?? 0,
@@ -50,6 +42,19 @@ export default function AuditScreen() {
     }
 
     setLoading(false);
+  };
+
+  const generateAudit = async () => {
+    if (!profile) return;
+    setLoading(true);
+    try {
+      const generated = await generateAndPersistWeeklyAudit(profile);
+      setAudit(generated);
+    } catch (error) {
+      Alert.alert('Could not generate audit', error instanceof Error ? error.message : 'Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -89,7 +94,7 @@ export default function AuditScreen() {
             <Text className="text-white/40 text-sm text-center mb-6">
               Complete at least 3 check-ins this week to generate your audit.
             </Text>
-            <TouchableOpacity className="bg-gold rounded-xl px-6 py-3">
+            <TouchableOpacity className="bg-gold rounded-xl px-6 py-3" onPress={generateAudit}>
               <Text className="text-surface font-bold">Generate Audit</Text>
             </TouchableOpacity>
           </View>
@@ -129,13 +134,13 @@ export default function AuditScreen() {
                         <View
                           className="h-1.5 rounded-full"
                           style={{
-                            width: score != null ? `${(score / 10) * 100}%` : '0%',
+                            width: score != null ? `${Math.max(0, Math.min(100, score))}%` : '0%',
                             backgroundColor: pillar.color,
                           }}
                         />
                       </View>
                       <Text className="text-white font-bold text-sm w-8 text-right">
-                        {score != null ? score.toFixed(1) : '–'}
+                        {score != null ? Math.round(score) : '–'}
                       </Text>
                     </View>
                   );
@@ -147,7 +152,7 @@ export default function AuditScreen() {
             {audit.aiSummary && (
               <View className="bg-surface-raised rounded-2xl p-5">
                 <Text className="text-gold text-xs tracking-widest uppercase mb-3">
-                  Coach's Assessment
+                  Coach's Assessment · AI-generated
                 </Text>
                 <Text className="text-white/80 text-sm leading-relaxed">
                   {audit.aiSummary}

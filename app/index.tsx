@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuthStore } from '../store/auth';
+import { PRIVACY_VERSION, TERMS_VERSION } from '../lib/legal';
 
 // Entry point — routes to auth or app based on session state
 export default function Index() {
@@ -17,6 +17,14 @@ export default function Index() {
 
   if (!session) {
     return <Redirect href="/(auth)/welcome" />;
+  }
+
+  if (
+    !profile?.legalConsentComplete ||
+    profile.termsVersion !== TERMS_VERSION ||
+    profile.privacyVersion !== PRIVACY_VERSION
+  ) {
+    return <Redirect href={'/legal-consent' as never} />;
   }
 
   if (!profile?.onboardingComplete) {

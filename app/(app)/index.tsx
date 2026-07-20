@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/auth';
 import { useCheckInStore } from '../../store/checkin';
+import { useDirectiveStore } from '../../store/directive';
 import { PILLARS } from '../../lib/pillars';
 import type { PillarId } from '../../types';
 
@@ -15,7 +16,7 @@ function PillarScoreCard({
   score: number;
 }) {
   const pillar = PILLARS.find((p) => p.id === pillarId)!;
-  const pct = Math.round((score / 10) * 100);
+  const pct = Math.max(0, Math.min(100, Math.round(score)));
 
   return (
     <View className="bg-surface-raised rounded-2xl p-4 flex-1 min-w-[44%]">
@@ -32,7 +33,7 @@ function PillarScoreCard({
           style={{ width: `${pct}%`, backgroundColor: pillar.color }}
         />
       </View>
-      <Text className="text-white font-bold text-xl">{score.toFixed(1)}</Text>
+      <Text className="text-white font-bold text-xl">{Math.round(score)}</Text>
     </View>
   );
 }
@@ -40,11 +41,14 @@ function PillarScoreCard({
 export default function Dashboard() {
   const router = useRouter();
   const { profile } = useAuthStore();
-  const { todaysCheckIn, loadTodaysCheckIn } = useCheckInStore();
+  const { todaysCheckIn, recentCheckIns, loadTodaysCheckIn, loadRecentCheckIns } = useCheckInStore();
+  const { todayDirective, loading: directiveLoading, loadToday, generateForCheckIn, complete, skip } = useDirectiveStore();
 
   useEffect(() => {
     if (profile?.id) {
       loadTodaysCheckIn(profile.id);
+      loadRecentCheckIns(profile.id);
+      loadToday(profile.id);
     }
   }, [profile?.id]);
 
@@ -90,26 +94,49 @@ export default function Dashboard() {
           </Text>
         </View>
 
-        {/* Today's Directive CTA */}
+        {/* Today's Directive */}
         <View className="px-6 mb-6">
-          <TouchableOpacity
-            className="bg-gold/10 border border-gold/30 rounded-2xl p-5"
-            onPress={() => router.push('/(app)/checkin')}
-            activeOpacity={0.8}
-          >
+          <View className="bg-gold/10 border border-gold/30 rounded-2xl p-5">
             <Text className="text-gold text-xs tracking-widest uppercase mb-2">
-              Today's Directive
+              Today's Directive · AI-generated
             </Text>
-            {checkedInToday ? (
-              <Text className="text-white text-base font-medium">
-                Check-in complete. View your directive →
-              </Text>
+            {todayDirective ? (
+              <View>
+                <Text className="text-white text-xl font-bold mb-2">{todayDirective.title}</Text>
+                <Text className="text-white/60 text-sm leading-relaxed mb-4">{todayDirective.body}</Text>
+                <Text className="text-white font-semibold mb-5">{todayDirective.action}</Text>
+                {todayDirective.completedAt ? (
+                  <Text className="text-body font-semibold">Completed today</Text>
+                ) : todayDirective.skippedAt ? (
+                  <Text className="text-white/40">Skipped today</Text>
+                ) : (
+                  <View className="flex-row gap-3">
+                    <TouchableOpacity className="bg-gold rounded-xl px-5 py-3" onPress={() => void complete(todayDirective.id)}>
+                      <Text className="text-surface font-bold">Complete</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity className="border border-surface-border rounded-xl px-5 py-3" onPress={() => void skip(todayDirective.id)}>
+                      <Text className="text-white/50 font-semibold">Skip</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ) : checkedInToday && todaysCheckIn ? (
+              <TouchableOpacity
+                disabled={directiveLoading}
+                onPress={() => void generateForCheckIn(profile, recentCheckIns.length ? recentCheckIns : [todaysCheckIn])}
+              >
+                <Text className="text-white text-base font-medium">
+                  {directiveLoading ? 'Generating directive...' : 'Generate today\'s directive →'}
+                </Text>
+              </TouchableOpacity>
             ) : (
-              <Text className="text-white text-base font-medium">
+              <TouchableOpacity onPress={() => router.push('/(app)/checkin')}>
+                <Text className="text-white text-base font-medium">
                 Complete today's check-in to unlock your directive →
-              </Text>
+                </Text>
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Pillar Scores */}

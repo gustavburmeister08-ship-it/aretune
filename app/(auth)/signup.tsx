@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,21 +16,34 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   const handleSignup = async () => {
-    if (!email || !password) return;
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) return;
+    setFeedback(null);
+    if (password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setFeedback('Use at least 8 characters with upper case, lower case, and a number.');
+      return;
+    }
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password,
+    });
 
     if (error) {
-      Alert.alert('Error', error.message);
+      setFeedback(error.message);
       setLoading(false);
       return;
     }
 
-    // Profile creation happens via Supabase trigger (see migrations)
-    router.replace('/onboarding');
+    if (data.session) {
+      router.replace('/legal-consent' as never);
+    } else {
+      setFeedback('Account created. Sign in to continue.');
+    }
     setLoading(false);
   };
 
@@ -83,6 +95,9 @@ export default function Signup() {
 
           {/* Submit */}
           <View className="gap-4">
+            {feedback ? (
+              <Text className="text-red-400 text-sm text-center">{feedback}</Text>
+            ) : null}
             <TouchableOpacity
               className="bg-gold rounded-2xl py-4 items-center"
               onPress={handleSignup}
