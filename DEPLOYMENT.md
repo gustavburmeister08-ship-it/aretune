@@ -19,12 +19,18 @@ operator information, credentials, or a hosting decision before publication.
 
 ## 2. Website, web app, and API
 
-- Marketing website: `https://uebermensch-ai.pages.dev/`.
-- Web app: `https://uebermensch-ai.pages.dev/app/`.
-- API origin: `https://uebermensch-ai.pages.dev/api/`.
-- The marketing website, Expo static output under `/app`, and Cloudflare Pages
-  Functions are deployed together from `main`. Run `npm run bundle:pages` before
-  deploying so a Pages release cannot replace the website with the app again.
+- Marketing website: `https://uebermensch-ai.pages.dev/` (separate Cloudflare
+  Pages project `uebermensch-ai`, separate repo `hub-uebermensch-ai`).
+- Web app: `https://app-uebermensch-ai.pages.dev/app/` (own Cloudflare Pages
+  project `app-uebermensch-ai`, this repo).
+- API origin: `https://app-uebermensch-ai.pages.dev/api/`.
+- The website project redirects `/app/*` and `/api/*` (301, query-string
+  preserved) to the app project via `public/_redirects` in the website repo.
+  The app and website deploy independently; a website release can no longer
+  overwrite the app or its API functions. Run `npm run deploy:test` /
+  `npm run deploy:live` from this repo to build the Expo web export plus
+  Pages Functions and deploy them (`npm run build:pages` alone only builds
+  the local bundle without deploying).
 - `/api/health`, account deletion, authenticated AI directives, AI audits,
   consent enforcement, and daily token accounting run on Pages Functions.
 - Cloudflare Workers AI uses `@cf/meta/llama-3.1-8b-instruct-fast`; no separate
@@ -35,6 +41,13 @@ operator information, credentials, or a hosting decision before publication.
   production secret. Per operator instruction, the code change has not yet
   been deployed or live-tested.
 - The Supabase service-role key is stored as an encrypted Cloudflare secret.
+- **BLOCKED:** `ANTHROPIC_API_KEY`, the Supabase service-role key, and
+  `INTEGRATION_ENCRYPTION_KEY` existed as secrets on the old combined
+  `uebermensch-ai` project but have not yet been set on the new
+  `app-uebermensch-ai` project (`wrangler pages secret put <NAME> --project-name
+  app-uebermensch-ai`). Until then the app falls back to Workers AI and
+  integration connect/callback routes that need `INTEGRATION_ENCRYPTION_KEY`
+  will fail.
 - A real production E2E created an immediately authenticated temporary account,
   generated a valid directive, and deleted the test account afterward.
 - External tracking is deployed at `/integrations`. CSV/JSON import is available
@@ -43,7 +56,10 @@ operator information, credentials, or a hosting decision before publication.
   scaffolded behind provider credentials/approval. `INTEGRATION_ENCRYPTION_KEY`
   is stored as an encrypted Pages secret.
 - **BLOCKED PER PROVIDER:** add each provider's client ID/secret in Cloudflare
-  and register `https://uebermensch-ai.pages.dev/api/integrations/{provider}/callback`.
+  and register `https://app-uebermensch-ai.pages.dev/api/integrations/{provider}/callback`.
+  As of the 2026-07-20 app/website Cloudflare-project split, no provider had
+  this callback registered yet, so there was nothing to re-register on the
+  old `uebermensch-ai.pages.dev` domain.
   Garmin, Samsung Health, Dexcom and some other providers additionally require
   partner approval. Apple HealthKit and Android Health Connect require native
   builds and cannot be read directly by the Pages web app.
@@ -75,11 +91,11 @@ and package name are configured.
 
 - **BLOCKED:** authenticate the Expo/EAS account and initialize/link the EAS
   project; the current machine has no Expo session or `EXPO_TOKEN`.
-- **BLOCKED:** add `https://uebermensch-ai.pages.dev` as the API URL in EAS
+- **BLOCKED:** add `https://app-uebermensch-ai.pages.dev` as the API URL in EAS
   before building the native apps. The web app URL is
-  `https://uebermensch-ai.pages.dev/app/`; OAuth callbacks remain under the API
-  origin, for example
-  `https://uebermensch-ai.pages.dev/api/integrations/{provider}/callback`.
+  `https://app-uebermensch-ai.pages.dev/app/`; OAuth callbacks remain under the
+  API origin, for example
+  `https://app-uebermensch-ai.pages.dev/api/integrations/{provider}/callback`.
 
 ## 4. Alpha gate
 
