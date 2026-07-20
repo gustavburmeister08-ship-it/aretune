@@ -1,104 +1,124 @@
 import type { FastifyInstance } from 'fastify';
-import { generateText } from 'ai';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
 import { getModel, COACH_SYSTEM_PROMPT } from '../lib/ai';
+import { AuthenticationError, assertOwnRequest, requireAiProcessingConsent, requireAuthenticatedUser } from '../lib/auth';
+import { enforceRateLimit, RateLimitError } from '../lib/rate-limit';
 import type { DirectiveRequest, DirectiveResponse, PillarId } from '../lib/types';
+import { assertDailyTokenBudget, DailyBudgetError, recordAiUsage } from '../lib/usage';
+
+const pillarSchema = z.enum(['body', 'mind', 'spirit', 'relationships', 'vocation', 'lore']);
+const pillarScoresSchema = z.record(z.string(), z.number().min(0).max(100));
+const directiveRequestSchema = z.object({
+  userId: z.string().uuid(),
+  phase: z.enum(['dissonance', 'uncertainty', 'discovery']),
+  activePillars: z.array(pillarSchema).min(1).max(6),
+  pillarScores: pillarScoresSchema,
+  recentMoods: z.array(z.number().min(0).max(10)).max(14),
+  recentEnergy: z.array(z.number().min(0).max(10)).max(14),
+  recentMetrics: z.record(z.string(), z.array(z.number()).max(14)),
+  provider: z.enum(['anthropic', 'openai']).optional(),
+});
+
+const directiveOutputSchema = z.object({
+  pillar: pillarSchema,
+  title: z.string().min(3).max(80),
+  body: z.string().min(10).max(500),
+  why: z.string().min(10).max(240),
+  action: z.string().min(3).max(160),
+});
 
 const PILLAR_LABELS: Record<PillarId, string> = {
-  mind: 'Mind (cognition, focus, learning)',
-  emotion: 'Emotion (regulation, resilience, stress)',
-  body: 'Body (health, fitness, energy)',
-  relationships: 'Relationships (tribe, intimacy, trust)',
-  vocation: 'Vocation (craft, career, output)',
-  wealth: 'Wealth (savings, investing, discipline)',
-  adventure: 'Adventure (experiences, creation, aliveness)',
+  body: 'Body (health, energy, performance, recovery)',
+  mind: 'Mind (focus, learning, reasoning, emotional intelligence)',
+  spirit: 'Spirit (purpose, presence, identity, inner development)',
+  relationships: 'Relationships (intimacy, trust, family, community)',
+  vocation: 'Vocation (craft, output, wealth, influence, autonomy)',
+  lore: 'Lore (adventure, culture, rare skills, meaningful experiences)',
 };
 
-function findWeakestPillar(
+export function findWeakestPillar(
   activePillars: PillarId[],
   pillarScores: Partial<Record<PillarId, number>>
 ): PillarId {
-  return activePillars.reduce((weakest, pillar) => {
-    const score = pillarScores[pillar] ?? 5;
-    const weakestScore = pillarScores[weakest] ?? 5;
-    return score < weakestScore ? pillar : weakest;
-  }, activePillars[0]);
+  return activePillars.reduce((weakest, pillar) =>
+    (pillarScores[pillar] ?? 50) < (pillarScores[weakest] ?? 50) ? pillar : weakest
+  , activePillars[0]);
 }
 
-function buildDirectivePrompt(req: DirectiveRequest): string {
-  const weakest = findWeakestPillar(req.activePillars, req.pillarScores);
-  const avgMood = req.recentMoods.length
-    ? (req.recentMoods.reduce((a, b) => a + b, 0) / req.recentMoods.length).toFixed(1)
+function average(values: number[]): string {
+  return values.length
+    ? (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1)
     : 'unknown';
-  const avgEnergy = req.recentEnergy.length
-    ? (req.recentEnergy.reduce((a, b) => a + b, 0) / req.recentEnergy.length).toFixed(1)
-    : 'unknown';
+}
 
-  const scoresText = req.activePillars
-    .map((p) => `  - ${PILLAR_LABELS[p]}: ${(req.pillarScores[p] ?? 0).toFixed(1)}/10`)
+function buildDirectivePrompt(req: DirectiveRequest, weakest: PillarId): string {
+  const scores = req.activePillars
+    .map((pillar) => `- ${PILLAR_LABELS[pillar]}: ${(req.pillarScores[pillar] ?? 0).toFixed(0)}/100`)
     .join('\n');
+  const metricTrends = Object.entries(req.recentMetrics)
+    .slice(0, 12)
+    .map(([metricId, values]) => `- ${metricId}: ${values.slice(0, 7).join(', ')}`)
+    .join('\n') || '- no recent metric data';
 
-  return `Generate a single daily directive for this user.
+  return `Generate exactly one daily directive.
 
-USER CONTEXT:
+USER CONTEXT
 - Phase: ${req.phase}
-- Average mood (7 days): ${avgMood}/10
-- Average energy (7 days): ${avgEnergy}/10
-- Weakest pillar: ${PILLAR_LABELS[weakest]}
+- Average mood: ${average(req.recentMoods)}/10
+- Average energy: ${average(req.recentEnergy)}/10
+- Target pillar: ${PILLAR_LABELS[weakest]}
 
-PILLAR SCORES:
-${scoresText}
+PILLAR SCORES
+${scores}
 
-DIRECTIVE RULES:
-- Target the weakest pillar: ${weakest}
-- Be specific — no generic advice
-- The action must be completable today
-- Match intensity to phase (dissonance=gentle activation, uncertainty=direction, discovery=optimization)
-- Be direct. No softening language.
+RECENT METRICS (newest first)
+${metricTrends}
 
-Respond with ONLY this JSON (no other text):
-{
-  "pillar": "${weakest}",
-  "title": "Short directive title (max 8 words)",
-  "body": "2-3 sentences explaining the directive and why it matters for this user right now.",
-  "why": "One sentence: the specific mechanism — why this produces results.",
-  "action": "Single concrete action. Start with a verb. Be specific. Max 20 words."
-}`;
+The action must be safe, specific, measurable, and completable today. Match the intensity to the user's phase. Do not invent facts that are absent from the data.`;
 }
 
 export async function directiveRoute(fastify: FastifyInstance) {
   fastify.post<{ Body: DirectiveRequest }>('/directive', async (request, reply) => {
-    const body = request.body;
-
-    if (!body.userId || !body.phase || !body.activePillars?.length) {
-      return reply.status(400).send({ error: 'Missing required fields' });
-    }
-
-    const provider = body.provider ?? 'anthropic';
-    const model = getModel(provider);
-    const modelId = provider === 'anthropic' ? 'claude-sonnet-4-6' : 'gpt-4o';
-
     try {
-      const prompt = buildDirectivePrompt(body);
+      const userId = await requireAuthenticatedUser(request);
+      enforceRateLimit(`directive:${userId}`, 10, 60_000);
+      const parsedRequest = directiveRequestSchema.safeParse(request.body);
+      if (!parsedRequest.success) {
+        return reply.status(400).send({ error: 'Invalid request', details: parsedRequest.error.flatten() });
+      }
+      assertOwnRequest(userId, parsedRequest.data.userId);
+      await requireAiProcessingConsent(userId);
+      await assertDailyTokenBudget(userId);
 
-      const { text } = await generateText({
+      const body = parsedRequest.data as DirectiveRequest;
+      const provider = body.provider ?? 'anthropic';
+      const { model, modelId } = getModel(provider);
+      const weakest = findWeakestPillar(body.activePillars, body.pillarScores);
+      const { output, usage } = await generateText({
         model,
         system: COACH_SYSTEM_PROMPT,
-        prompt,
-        maxOutputTokens: 400,
-        temperature: 0.7,
+        prompt: buildDirectivePrompt(body, weakest),
+        output: Output.object({ schema: directiveOutputSchema }),
+        maxOutputTokens: 500,
+        temperature: 0.6,
+        abortSignal: AbortSignal.timeout(20_000),
       });
 
-      // Parse the JSON response
-      const parsed = JSON.parse(text.trim()) as Omit<DirectiveResponse, 'model'>;
-
-      const directive: DirectiveResponse = {
-        ...parsed,
-        model: modelId,
-      };
-
+      const directive: DirectiveResponse = { ...output, pillar: weakest, model: modelId };
+      await recordAiUsage({ userId, route: 'directive', provider, model: modelId, inputTokens: usage.inputTokens, outputTokens: usage.outputTokens });
       return reply.send(directive);
-    } catch (err: any) {
-      fastify.log.error(err);
+    } catch (error) {
+      if (error instanceof AuthenticationError) {
+        return reply.status(401).send({ error: error.message });
+      }
+      if (error instanceof RateLimitError) {
+        return reply.header('Retry-After', error.retryAfterSeconds).status(429).send({ error: error.message });
+      }
+      if (error instanceof DailyBudgetError) {
+        return reply.status(429).send({ error: error.message });
+      }
+      fastify.log.error(error);
       return reply.status(500).send({ error: 'Failed to generate directive' });
     }
   });

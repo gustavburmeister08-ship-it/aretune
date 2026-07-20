@@ -1,8 +1,6 @@
 export type AIProvider = 'anthropic' | 'openai';
 export type Phase = 'dissonance' | 'uncertainty' | 'discovery';
-export type PillarId =
-  | 'mind' | 'emotion' | 'body' | 'relationships'
-  | 'vocation' | 'wealth' | 'adventure';
+export type PillarId = 'body' | 'mind' | 'spirit' | 'relationships' | 'vocation' | 'lore';
 
 export interface DirectiveRequest {
   userId: string;
@@ -11,7 +9,7 @@ export interface DirectiveRequest {
   pillarScores: Partial<Record<PillarId, number>>;
   recentMoods: number[];
   recentEnergy: number[];
-  recentMetrics: Record<string, number[]>; // metricId -> last 7 values
+  recentMetrics: Record<string, number[]>;
   provider?: AIProvider;
 }
 
