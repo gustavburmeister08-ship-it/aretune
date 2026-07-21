@@ -6,7 +6,9 @@ import * as Haptics from 'expo-haptics';
 import { CATEGORY_MAP } from '../../../lib/category-catalog';
 import { PILLAR_MAP } from '../../../lib/pillars';
 import { loadCategoryEntries, persistCategoryScores, saveCategoryEntry } from '../../../lib/category-tracking';
+import { categoryMetricPercentiles } from '../../../lib/category-scoring';
 import { useAuthStore } from '../../../store/auth';
+import type { BenchmarkResult } from '../../../lib/benchmarks';
 import type { CategoryMetricDefinition, CategoryTrackingEntry } from '../../../types';
 
 const FREQUENCY_LABELS = {
@@ -80,10 +82,11 @@ function ScoreField({ value, max, onChange }: { value?: number; max: number; onC
   );
 }
 
-function MetricField({ metric, value, onChange }: {
+function MetricField({ metric, value, onChange, percentile }: {
   metric: CategoryMetricDefinition;
   value?: number;
   onChange: (value: number | undefined) => void;
+  percentile?: BenchmarkResult;
 }) {
   const scoreLike = metric.type === 'score' || metric.type === 'level';
   return (
@@ -93,10 +96,16 @@ function MetricField({ metric, value, onChange }: {
           <View className="flex-row items-center flex-wrap gap-2">
             <Text className="text-white font-semibold text-sm">{metric.label}</Text>
             {metric.private && <Text className="text-gold/80 text-[10px] uppercase tracking-wider">Private</Text>}
+            {percentile && (
+              <Text className="text-gold/80 text-[10px] uppercase tracking-wider">{percentile.label}</Text>
+            )}
           </View>
           <Text className="text-white/35 text-xs mt-1">
             {FREQUENCY_LABELS[metric.frequency]} · Target {metric.target}{metric.unit ? ` ${metric.unit}` : ''}
           </Text>
+          {percentile && (
+            <Text className="text-white/25 text-[10px] mt-1">{percentile.population}</Text>
+          )}
         </View>
         {!scoreLike && metric.type !== 'boolean' && (
           <NumberField metric={metric} value={value} onChange={onChange} />
@@ -124,6 +133,10 @@ export default function CategoryTrackingScreen() {
   const [saving, setSaving] = useState(false);
   const latest = history[0];
   const hasSensitiveMetrics = useMemo(() => category?.metrics.some((metric) => metric.private) ?? false, [category]);
+  const percentiles = useMemo(
+    () => (categoryId ? categoryMetricPercentiles(categoryId, history) : {}),
+    [categoryId, history]
+  );
 
   useEffect(() => {
     if (!profile?.id || !categoryId || !category) return;
@@ -207,6 +220,7 @@ export default function CategoryTrackingScreen() {
                 key={metric.id}
                 metric={metric}
                 value={values[metric.id]}
+                percentile={percentiles[metric.id]}
                 onChange={(value) => setValues((current) => {
                   if (value == null) { const next = { ...current }; delete next[metric.id]; return next; }
                   return { ...current, [metric.id]: value };

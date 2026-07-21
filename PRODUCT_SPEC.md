@@ -61,9 +61,13 @@ Category Score v2 combines Performance (40%) and Lifestyle (60%). Lifestyle uses
 - intensity: 15%
 
 AI may explain scores but must never calculate or silently modify them.
-Metric targets provide transparent target attainment, but are not presented as
-population percentiles. BODY uses the documented category weights; other pillars
-use neutral weights summing to 100 until researched weights are approved.
+Metric targets provide transparent target attainment. Population-percentile
+comparison (`lib/benchmarks.ts`) is live for two pilot metrics with a real,
+cited data source — sleep duration (CDC) and monthly income (Destatis) — and
+intentionally not extended to metrics without a defensible source; see the
+file header for methodology and caveats. BODY uses the documented category
+weights; other pillars use neutral weights summing to 100 until researched
+weights are approved.
 
 ## Alpha success criteria
 

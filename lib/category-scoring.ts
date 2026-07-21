@@ -1,4 +1,5 @@
 import { CATEGORIES_BY_PILLAR, CATEGORY_MAP } from './category-catalog';
+import { percentileFor, type BenchmarkResult } from './benchmarks';
 import type {
   CategoryMetricDefinition,
   CategoryTrackingEntry,
@@ -207,4 +208,38 @@ export function calculateCategoryScores(
   calculatedAt = new Date().toISOString()
 ) {
   return pillars.map((pillar) => calculateCategoryPillarScore(pillar, entries, calculatedAt));
+}
+
+// Population-benchmark percentiles for a category's metrics, additive to the
+// score formula above (never influences performance/lifestyle/pillar
+// scores). Only returns entries for metrics with a cited benchmark source
+// (see lib/benchmarks.ts) and at least one logged value.
+export function categoryMetricPercentiles(
+  categoryId: string,
+  entries: CategoryTrackingEntry[]
+): Record<string, BenchmarkResult> {
+  const category = CATEGORY_MAP[categoryId];
+  if (!category) return {};
+
+  const latestByMetric = new Map<string, { value: number; loggedAt: string }>();
+  for (const entry of entries) {
+    if (entry.categoryId !== categoryId) continue;
+    for (const [metricId, rawValue] of Object.entries(entry.values)) {
+      const value = Number(rawValue);
+      if (!Number.isFinite(value)) continue;
+      const current = latestByMetric.get(metricId);
+      if (!current || entry.loggedAt > current.loggedAt) {
+        latestByMetric.set(metricId, { value, loggedAt: entry.loggedAt });
+      }
+    }
+  }
+
+  const results: Record<string, BenchmarkResult> = {};
+  for (const metric of category.metrics) {
+    const latest = latestByMetric.get(metric.id);
+    if (!latest) continue;
+    const result = percentileFor(metric.id, latest.value);
+    if (result) results[metric.id] = result;
+  }
+  return results;
 }
