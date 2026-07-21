@@ -1,4 +1,5 @@
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
+const OPENROUTER_MODEL = '~openai/gpt-latest';
 const WORKERS_AI_MODEL = '@cf/meta/llama-3.1-8b-instruct-fast';
 const SYSTEM_PROMPT = `You are the Aretune coaching engine: direct, precise, practical, and focused on measurable growth across Body, Mind, Spirit, Relationships, Vocation, and Lore. Use only supplied user data. Never diagnose medical or mental-health conditions. Never promise financial outcomes. Recommend professional help for immediate safety risks.`;
 
@@ -413,7 +414,34 @@ async function generateChatReply(env, contextPrompt, history) {
       return { text, usage: result.usage ?? {}, provider: 'anthropic', model: ANTHROPIC_MODEL };
     } catch (error) {
       // Keep the chat available during provider outages, invalid credentials, or quota issues.
-      console.error(`Anthropic chat failed; using Workers AI fallback: ${String(error)}`);
+      console.error(`Anthropic chat failed; trying OpenRouter next: ${String(error)}`);
+    }
+  }
+
+  if (env.OPENROUTER_API_KEY) {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+        }),
+      });
+      if (!response.ok) {
+        const details = await response.text();
+        throw new Error(`HTTP ${response.status}: ${details.slice(0, 500)}`);
+      }
+      const result = await response.json();
+      const text = result.choices?.[0]?.message?.content;
+      if (!text) throw new Error('No text output');
+      return { text, usage: result.usage ?? {}, provider: 'openrouter', model: result.model ?? OPENROUTER_MODEL };
+    } catch (error) {
+      // Keep the chat available during provider outages, invalid credentials, or quota issues.
+      console.error(`OpenRouter chat failed; using Workers AI fallback: ${String(error)}`);
     }
   }
 
