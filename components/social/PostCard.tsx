@@ -1,5 +1,6 @@
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { PILLAR_MAP } from '../../lib/pillars';
 import type { CommunityPost } from '../../types';
 
 const relativeTime = (iso: string) => {
@@ -19,6 +20,22 @@ export function Avatar({ uri, name, size = 44 }: { uri?: string; name: string; s
       ) : (
         <Text className="text-gold font-bold" style={{ fontSize: size * 0.36 }}>{name[0]?.toUpperCase() ?? 'O'}</Text>
       )}
+    </View>
+  );
+}
+
+function MilestoneBanner({ pillar, score }: { pillar: CommunityPost['milestonePillar']; score: number }) {
+  const definition = pillar ? PILLAR_MAP[pillar] : undefined;
+  if (!definition) return null;
+  return (
+    <View
+      className="flex-row items-center gap-2 rounded-xl px-3 py-2 mt-2 self-start"
+      style={{ backgroundColor: definition.color + '1A', borderWidth: 1, borderColor: definition.color + '55' }}
+    >
+      <Text style={{ fontSize: 16 }}>🏆</Text>
+      <Text style={{ color: definition.color, fontWeight: '700', fontSize: 13 }}>
+        {definition.label} milestone · {Math.round(score)}
+      </Text>
     </View>
   );
 }
@@ -58,6 +75,9 @@ export function PostCard({
               <Text className="text-white/35 text-lg">•••</Text>
             </TouchableOpacity>
           </View>
+          {post.postType === 'milestone' && post.milestonePillar && post.milestoneScore != null && (
+            <MilestoneBanner pillar={post.milestonePillar} score={post.milestoneScore} />
+          )}
           {!!post.body && <Text className="text-white/80 text-[15px] leading-6 mt-2">{post.body}</Text>}
         </View>
       </View>

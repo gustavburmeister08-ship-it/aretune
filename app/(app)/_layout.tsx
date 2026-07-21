@@ -62,6 +62,7 @@ export default function AppLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="leaderboard" options={{ href: null }} />
       <Tabs.Screen name="pillars" options={{ href: null }} />
       <Tabs.Screen name="audit" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />

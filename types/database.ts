@@ -72,8 +72,8 @@ export interface Database {
         Relationships: EmptyRelationships;
       };
       social_posts: {
-        Row: { id: string; user_id: string; body: string; image_path: string | null; created_at: string; updated_at: string; deleted_at: string | null };
-        Insert: { id?: string; user_id: string; body?: string; image_path?: string | null; created_at?: string; updated_at?: string; deleted_at?: string | null };
+        Row: { id: string; user_id: string; body: string; image_path: string | null; created_at: string; updated_at: string; deleted_at: string | null; post_type: 'text' | 'milestone'; milestone_pillar: string | null; milestone_score: number | null };
+        Insert: { id?: string; user_id: string; body?: string; image_path?: string | null; created_at?: string; updated_at?: string; deleted_at?: string | null; post_type?: 'text' | 'milestone'; milestone_pillar?: string | null; milestone_score?: number | null };
         Update: { body?: string; image_path?: string | null; updated_at?: string; deleted_at?: string | null };
         Relationships: EmptyRelationships;
       };
@@ -221,6 +221,17 @@ export interface Database {
           active_pillars: string[];
           pillar_scores: Json;
           member_since: string;
+        }>;
+      };
+      get_pillar_leaderboard: {
+        Args: { p_pillar: string; p_limit?: number };
+        Returns: Array<{
+          user_id: string;
+          username: string | null;
+          display_name: string;
+          avatar_path: string | null;
+          pillar_score: number;
+          rank: number;
         }>;
       };
       is_username_available: {

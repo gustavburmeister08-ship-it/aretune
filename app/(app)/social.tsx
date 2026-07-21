@@ -120,6 +120,9 @@ export default function SocialFeedScreen() {
           <Text className="text-white/35 text-xs mt-1">Share progress. Build with serious people.</Text>
         </View>
         <View className="flex-row items-center gap-2">
+          <TouchableOpacity className="bg-surface-raised border border-surface-border rounded-xl px-3 py-3" onPress={() => router.push('/(app)/leaderboard' as never)}>
+            <Text style={{ fontSize: 16 }}>🏆</Text>
+          </TouchableOpacity>
           <TouchableOpacity className="bg-surface-raised border border-surface-border rounded-xl px-4 py-3" onPress={() => router.push('/(app)/messages' as never)}>
             <Text className="text-gold font-bold text-sm">Messages</Text>
           </TouchableOpacity>

@@ -41,13 +41,19 @@ Included:
 - persisted weekly audit with an AI-written explanation
 - product analytics events and operational error logging
 
+Shipped ahead of the original Alpha cutoff, per the full feature-scope plan
+(2026-07-21, `~/.claude/plans/bubbly-riding-iverson.md`):
+
+- per-pillar leaderboards (discoverable profiles only, pillar totals only —
+  never private category data) and milestone-sharing posts
+- population-percentile claims for two cited pilot metrics (see
+  `lib/benchmarks.ts`)
+
 Deferred until retention is proven:
 
-- leaderboards and community ranking
-- population percentile claims
 - autonomous long-term planning
 - calendar, wearable, and financial integrations
-- public Performance Score comparisons
+- public Performance Score comparisons beyond the two pilot metrics
 
 ## Score contract
 

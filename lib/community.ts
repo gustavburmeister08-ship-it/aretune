@@ -4,6 +4,7 @@ import type {
   CommunityPost,
   CommunityProfile,
   ConversationSummary,
+  PillarLeaderboardEntry,
   PublicCommunityProfile,
   SocialLink,
   SocialMessage,
@@ -43,6 +44,9 @@ async function hydratePosts(rows: Array<{
   body: string;
   image_path: string | null;
   created_at: string;
+  post_type: 'text' | 'milestone';
+  milestone_pillar: string | null;
+  milestone_score: number | null;
 }>, currentUserId: string): Promise<CommunityPost[]> {
   if (!rows.length) return [];
   const postIds = rows.map((post) => post.id);
@@ -69,15 +73,20 @@ async function hydratePosts(rows: Array<{
       likeCount: likes.length,
       commentCount: (commentsResult.data ?? []).filter((comment) => comment.post_id === post.id).length,
       likedByMe: likes.some((like) => like.user_id === currentUserId),
+      postType: post.post_type,
+      milestonePillar: (post.milestone_pillar as PillarId | null) ?? undefined,
+      milestoneScore: post.milestone_score ?? undefined,
     };
   });
 }
+
+const POST_COLUMNS = 'id,user_id,body,image_path,created_at,post_type,milestone_pillar,milestone_score';
 
 export async function loadSocialFeed(currentUserId: string, page = 0, pageSize = 15) {
   const from = page * pageSize;
   const { data, error } = await supabase
     .from('social_posts')
-    .select('id,user_id,body,image_path,created_at')
+    .select(POST_COLUMNS)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .range(from, from + pageSize - 1);
@@ -88,7 +97,7 @@ export async function loadSocialFeed(currentUserId: string, page = 0, pageSize =
 export async function loadSocialPostsByUser(userId: string, currentUserId: string, limit = 60) {
   const { data, error } = await supabase
     .from('social_posts')
-    .select('id,user_id,body,image_path,created_at')
+    .select(POST_COLUMNS)
     .eq('user_id', userId)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
@@ -137,7 +146,7 @@ export async function loadPublicCommunityProfile(userId: string): Promise<{
 export async function loadSocialPost(postId: string, currentUserId: string) {
   const { data, error } = await supabase
     .from('social_posts')
-    .select('id,user_id,body,image_path,created_at')
+    .select(POST_COLUMNS)
     .eq('id', postId)
     .is('deleted_at', null)
     .single();
@@ -339,4 +348,45 @@ export async function sendSocialMessage(userId: string, conversationId: string, 
 export async function markConversationRead(conversationId: string) {
   const { error } = await supabase.rpc('mark_social_conversation_read', { p_conversation_id: conversationId });
   if (error) throw error;
+}
+
+export async function createMilestonePost(
+  userId: string,
+  pillar: PillarId,
+  score: number,
+  note?: string,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from('social_posts')
+    .insert({
+      user_id: userId,
+      body: (note ?? '').trim(),
+      post_type: 'milestone',
+      milestone_pillar: pillar,
+      milestone_score: score,
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+export async function loadPillarLeaderboard(pillar: PillarId, limit = 50): Promise<PillarLeaderboardEntry[]> {
+  const { data, error } = await supabase.rpc('get_pillar_leaderboard', { p_pillar: pillar, p_limit: limit });
+  if (error) throw error;
+  return (data ?? []).map((row: {
+    user_id: string;
+    username: string | null;
+    display_name: string;
+    avatar_path: string | null;
+    pillar_score: number;
+    rank: number;
+  }) => ({
+    userId: row.user_id,
+    username: row.username ?? undefined,
+    displayName: row.display_name || 'Operator',
+    avatarUrl: publicFileUrl('avatars', row.avatar_path),
+    pillarScore: row.pillar_score,
+    rank: row.rank,
+  }));
 }

@@ -66,6 +66,18 @@ export interface CommunityPost {
   likeCount: number;
   commentCount: number;
   likedByMe: boolean;
+  postType: 'text' | 'milestone';
+  milestonePillar?: PillarId;
+  milestoneScore?: number;
+}
+
+export interface PillarLeaderboardEntry {
+  userId: string;
+  username?: string;
+  displayName: string;
+  avatarUrl?: string;
+  pillarScore: number;
+  rank: number;
 }
 
 export interface CommunityComment {

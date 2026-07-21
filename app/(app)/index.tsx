@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Alert, View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/auth';
 import { useCheckInStore } from '../../store/checkin';
 import { useDirectiveStore } from '../../store/directive';
-import { PILLARS } from '../../lib/pillars';
+import { PILLARS, PILLAR_MAP } from '../../lib/pillars';
+import { createMilestonePost } from '../../lib/community';
+import { findNewMilestone, markMilestoneOffered } from '../../lib/milestones';
 import type { PillarId } from '../../types';
 
 function PillarScoreCard({
@@ -51,6 +53,33 @@ export default function Dashboard() {
       loadToday(profile.id);
     }
   }, [profile?.id]);
+
+  useEffect(() => {
+    if (!profile?.id || !profile.pillarScores) return;
+    findNewMilestone(profile.id, profile.pillarScores).then((milestone) => {
+      if (!milestone) return;
+      const pillarLabel = PILLAR_MAP[milestone.pillar].label;
+      Alert.alert(
+        'Milestone reached',
+        `Your ${pillarLabel} score just crossed ${Math.round(milestone.score)}. Share it with the community?`,
+        [
+          {
+            text: 'Not now',
+            style: 'cancel',
+            onPress: () => void markMilestoneOffered(profile.id, milestone.pillar, milestone.score),
+          },
+          {
+            text: 'Share',
+            onPress: () => {
+              void createMilestonePost(profile.id, milestone.pillar, milestone.score)
+                .then(() => markMilestoneOffered(profile.id, milestone.pillar, milestone.score))
+                .catch(() => Alert.alert('Could not share milestone'));
+            },
+          },
+        ]
+      );
+    });
+  }, [profile?.id, profile?.pillarScores]);
 
   if (!profile) {
     return (
