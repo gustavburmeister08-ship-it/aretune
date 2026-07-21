@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/auth';
 import { loadPillarLeaderboard } from '../../lib/community';
 import { PILLARS } from '../../lib/pillars';
 import { Avatar } from '../../components/social/PostCard';
+import { MiniHexagon } from '../../components/profile/MiniHexagon';
 import type { PillarId, PillarLeaderboardEntry } from '../../types';
 
 export default function LeaderboardScreen() {
@@ -75,7 +76,14 @@ export default function LeaderboardScreen() {
                   : { pathname: '/(app)/profile/[userId]', params: { userId: item.userId } } as never)}
               >
                 <Text className="text-white/40 font-bold w-7 text-center">{item.rank}</Text>
-                <Avatar uri={item.avatarUrl} name={item.displayName} size={36} />
+                <View>
+                  <Avatar uri={item.avatarUrl} name={item.displayName} size={36} />
+                  {item.pillarScores && Object.keys(item.pillarScores).length > 0 && (
+                    <View className="absolute -bottom-1 -right-1 bg-surface rounded-full p-0.5 border border-surface-border">
+                      <MiniHexagon scores={item.pillarScores} size={16} strokeWidth={1.2} color={activePillar.color} />
+                    </View>
+                  )}
+                </View>
                 <View className="flex-1">
                   <Text className="text-white font-semibold text-sm">{item.displayName}{mine ? ' (you)' : ''}</Text>
                   {item.username && <Text className="text-white/30 text-xs">@{item.username}</Text>}

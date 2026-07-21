@@ -16,6 +16,8 @@ import { useAuthStore } from '../store/auth';
 import { calculateOnboardingResult, detectPhase } from '../lib/onboarding';
 import { trackEvent } from '../lib/analytics';
 import { claimUsername, isUsernameAvailable, normalizeUsernameInput, usernameValidationError } from '../lib/username';
+import { MiniHexagon } from '../components/profile/MiniHexagon';
+import { scoreLevel, totalAretuneScore } from '../lib/aretune-score';
 import type { OnboardingAnswer, OnboardingResult } from '../types';
 import type { Json } from '../types/database';
 
@@ -212,16 +214,30 @@ export default function Onboarding() {
 
   if (isDone) {
     const phase = result?.phase ?? detectPhase(answers);
+    const initialScores = result?.initialScores ?? {};
+    const hasScores = Object.keys(initialScores).length > 0;
+    const total = totalAretuneScore(initialScores);
+    const level = scoreLevel(total);
     return (
       <SafeAreaView className="flex-1 bg-surface items-center justify-center px-8">
-        <Text className="text-5xl mb-6">⚡</Text>
-        <Text className="text-gold text-xs tracking-widest uppercase mb-3">
+        <Text className="text-gold text-xs tracking-[4px] uppercase mb-2">
           Initiation Complete
         </Text>
-        <Text className="text-white text-3xl font-bold text-center mb-4">
-          Phase:{' '}
-          <Text className="capitalize">{phase}</Text>
+        <Text className="text-white/50 text-sm text-center mb-6">
+          This is your starting sextet — Phase <Text className="capitalize text-white/80">{phase}</Text>
         </Text>
+
+        {hasScores && (
+          <>
+            <MiniHexagon scores={initialScores} size={224} color="#C9A84C" showGrid dots labels strokeWidth={2.4} />
+            <View className="flex-row items-baseline mt-4 mb-1">
+              <Text className="text-gold-light font-bold" style={{ fontSize: 40, letterSpacing: -1 }}>{total}</Text>
+              <Text className="text-white/30 font-bold text-lg"> /600</Text>
+            </View>
+            <Text className="text-gold text-xs tracking-[3px] uppercase mb-8">{level.name}</Text>
+          </>
+        )}
+
         <Text className="text-white/50 text-base text-center mb-10 leading-relaxed">
           Your profile has been calibrated. Your first directive awaits. The work begins now.
         </Text>

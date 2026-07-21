@@ -1,50 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/auth';
 import { useCheckInStore } from '../../store/checkin';
 import { useDirectiveStore } from '../../store/directive';
-import { PILLARS, PILLAR_MAP } from '../../lib/pillars';
+import { PILLAR_MAP } from '../../lib/pillars';
 import { createMilestonePost } from '../../lib/community';
 import { findNewMilestone, markMilestoneOffered } from '../../lib/milestones';
-import type { PillarId } from '../../types';
-
-function PillarScoreCard({
-  pillarId,
-  score,
-}: {
-  pillarId: PillarId;
-  score: number;
-}) {
-  const pillar = PILLARS.find((p) => p.id === pillarId)!;
-  const pct = Math.max(0, Math.min(100, Math.round(score)));
-
-  return (
-    <View className="bg-surface-raised rounded-2xl p-4 flex-1 min-w-[44%]">
-      <View className="flex-row items-center gap-2 mb-3">
-        <Text style={{ fontSize: 18 }}>{pillar.icon}</Text>
-        <Text className="text-white/70 text-xs font-medium tracking-wide uppercase">
-          {pillar.label}
-        </Text>
-      </View>
-      {/* Progress bar */}
-      <View className="h-1.5 bg-surface-overlay rounded-full mb-2">
-        <View
-          className="h-1.5 rounded-full"
-          style={{ width: `${pct}%`, backgroundColor: pillar.color }}
-        />
-      </View>
-      <Text className="text-white font-bold text-xl">{Math.round(score)}</Text>
-    </View>
-  );
-}
+import { loadScoreDelta, type ScoreDelta } from '../../lib/score-delta';
+import { ScoreRing } from '../../components/profile/ScoreRing';
+import { ScoreDeltaBadge } from '../../components/profile/ScoreDeltaBadge';
+import { HeaderHexagon } from '../../components/profile/HeaderHexagon';
+import { SextetChart } from '../../components/profile/SextetChart';
 
 export default function Dashboard() {
   const router = useRouter();
   const { profile } = useAuthStore();
   const { todaysCheckIn, recentCheckIns, loadTodaysCheckIn, loadRecentCheckIns } = useCheckInStore();
   const { todayDirective, loading: directiveLoading, loadToday, generateForCheckIn, complete, skip } = useDirectiveStore();
+  const [scoreDelta, setScoreDelta] = useState<ScoreDelta | null>(null);
 
   useEffect(() => {
     if (profile?.id) {
@@ -53,6 +28,11 @@ export default function Dashboard() {
       loadToday(profile.id);
     }
   }, [profile?.id]);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    loadScoreDelta(profile.id).then(setScoreDelta).catch(() => setScoreDelta(null));
+  }, [profile?.id, profile?.pillarScores]);
 
   useEffect(() => {
     if (!profile?.id || !profile.pillarScores) return;
@@ -107,13 +87,11 @@ export default function Dashboard() {
       >
         {/* Header */}
         <View className="px-6 pt-6 pb-4">
-          <View className="flex-row items-start justify-between mb-1">
+          <View className="flex-row items-center justify-between mb-1">
             <Text className="text-gold text-xs tracking-[4px] uppercase">
               Phase: {phaseLabel}
             </Text>
-            <TouchableOpacity onPress={() => router.push('/(app)/profile')}>
-              <Text style={{ fontSize: 20 }}>◉</Text>
-            </TouchableOpacity>
+            <HeaderHexagon scores={scores} />
           </View>
           <Text className="text-white text-2xl font-bold">
             {getGreeting()},{' '}
@@ -131,6 +109,27 @@ export default function Dashboard() {
               <Text className="text-white/50 text-xs font-medium">Weekly Audit ›</Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Aretune Score — hero */}
+        <View className="px-6 mb-6">
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => router.push('/(app)/profile')}
+            className="bg-surface-raised border border-surface-border rounded-3xl py-6 items-center"
+          >
+            <Text className="text-gold text-[11px] tracking-[3px] uppercase mb-1">
+              Aretune Score
+            </Text>
+            <ScoreRing scores={scores} size={216} />
+            {scoreDelta && scoreDelta.delta !== 0 ? (
+              <View className="mt-2">
+                <ScoreDeltaBadge delta={scoreDelta.delta} sinceDate={scoreDelta.sinceDate} />
+              </View>
+            ) : (
+              <Text className="text-white/30 text-[11px] mt-2">Tap for your full sextet ›</Text>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Today's Directive */}
@@ -178,27 +177,16 @@ export default function Dashboard() {
           </View>
         </View>
 
-        {/* Pillar Scores */}
+        {/* Your Sextet — the hexagon instrument */}
         <View className="px-6 mb-6">
-          <Text className="text-white/50 text-xs tracking-widest uppercase mb-4">
-            Pillar Scores
-          </Text>
           {Object.keys(scores).length === 0 ? (
             <View className="bg-surface-raised rounded-2xl p-6 items-center">
               <Text className="text-white/30 text-sm text-center">
-                Complete your first check-in to see pillar scores.
+                Complete your first check-in to see your sextet.
               </Text>
             </View>
           ) : (
-            <View className="flex-row flex-wrap gap-3">
-              {profile.activePillars.map((pillarId) => (
-                <PillarScoreCard
-                  key={pillarId}
-                  pillarId={pillarId}
-                  score={scores[pillarId] ?? 0}
-                />
-              ))}
-            </View>
+            <SextetChart scores={scores} />
           )}
         </View>
 

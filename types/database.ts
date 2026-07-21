@@ -231,8 +231,13 @@ export interface Database {
           display_name: string;
           avatar_path: string | null;
           pillar_score: number;
+          pillar_scores: Json;
           rank: number;
         }>;
+      };
+      get_public_sextets: {
+        Args: { p_user_ids: string[] };
+        Returns: Array<{ user_id: string; pillar_scores: Json }>;
       };
       is_username_available: {
         Args: { p_username: string };

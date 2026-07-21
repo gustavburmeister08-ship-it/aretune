@@ -46,6 +46,8 @@ export interface CommunityProfile {
   displayName: string;
   bio: string;
   avatarUrl?: string;
+  /** Public six-pillar totals for the signature hexagon (discoverable profiles only). */
+  pillarScores?: Partial<Record<PillarId, number>>;
 }
 
 export interface PublicCommunityProfile extends CommunityProfile {
@@ -77,6 +79,8 @@ export interface PillarLeaderboardEntry {
   displayName: string;
   avatarUrl?: string;
   pillarScore: number;
+  /** Full six-pillar totals for the signature hexagon (may be absent pre-migration). */
+  pillarScores?: Partial<Record<PillarId, number>>;
   rank: number;
 }
 

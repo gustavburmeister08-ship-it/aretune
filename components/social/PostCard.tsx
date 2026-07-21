@@ -1,6 +1,7 @@
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PILLAR_MAP } from '../../lib/pillars';
+import { MiniHexagon } from '../profile/MiniHexagon';
 import type { CommunityPost } from '../../types';
 
 const relativeTime = (iso: string) => {
@@ -60,7 +61,14 @@ export function PostCard({
     <View className="bg-surface-raised border-y border-surface-border px-5 py-4">
       <View className="flex-row items-start gap-3">
         <TouchableOpacity onPress={openProfile} accessibilityRole="link" accessibilityLabel={`Open ${post.author.displayName}'s profile`}>
-          <Avatar uri={post.author.avatarUrl} name={post.author.displayName} />
+          <View>
+            <Avatar uri={post.author.avatarUrl} name={post.author.displayName} />
+            {post.author.pillarScores && Object.keys(post.author.pillarScores).length > 0 && (
+              <View className="absolute -bottom-1 -right-1 bg-surface rounded-full p-0.5 border border-surface-border">
+                <MiniHexagon scores={post.author.pillarScores} size={18} strokeWidth={1.3} />
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
         <View className="flex-1">
           <View className="flex-row items-center justify-between">

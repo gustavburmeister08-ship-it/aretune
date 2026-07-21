@@ -31,8 +31,23 @@ const safeScore = (scores: Partial<Record<PillarId, number>>, pillar: PillarId) 
     : undefined;
 };
 
-export function SextetChart({ scores }: { scores: Partial<Record<PillarId, number>> }) {
+interface SextetOverlay {
+  scores: Partial<Record<PillarId, number>>;
+  color: string;
+  label: string;
+  /** Label for the primary (base) shape shown in the legend. */
+  baseLabel?: string;
+}
+
+export function SextetChart({
+  scores,
+  overlay,
+}: {
+  scores: Partial<Record<PillarId, number>>;
+  overlay?: SextetOverlay;
+}) {
   const values = PILLARS.map((pillar) => safeScore(scores, pillar.id));
+  const overlayValues = overlay ? PILLARS.map((pillar) => safeScore(overlay.scores, pillar.id)) : null;
   const rated = values.filter((value): value is number => value !== undefined);
   const average = rated.length ? Math.round(rated.reduce((sum, value) => sum + value, 0) / rated.length) : undefined;
   const accessibilitySummary = PILLARS
@@ -73,10 +88,21 @@ export function SextetChart({ scores }: { scores: Partial<Record<PillarId, numbe
             const end = pointAt(index);
             return <Line key={pillar.id} x1={CENTER} y1={CENTER} x2={end.x} y2={end.y} stroke="#303030" strokeWidth={1} />;
           })}
+          {overlayValues && overlay && (
+            <Polygon
+              points={pointsString(overlayValues.map((value) => value ?? 0))}
+              fill={overlay.color}
+              fillOpacity={0.08}
+              stroke={overlay.color}
+              strokeWidth={2}
+              strokeDasharray="4 4"
+              strokeLinejoin="round"
+            />
+          )}
           <Polygon
             points={pointsString(values.map((value) => value ?? 0))}
             fill="#C9A84C"
-            fillOpacity={0.24}
+            fillOpacity={overlay ? 0.18 : 0.24}
             stroke="#C9A84C"
             strokeWidth={2.5}
             strokeLinejoin="round"
@@ -105,6 +131,19 @@ export function SextetChart({ scores }: { scores: Partial<Record<PillarId, numbe
           })}
         </Svg>
       </View>
+
+      {overlay && (
+        <View className="flex-row items-center justify-center gap-5 mb-3">
+          <View className="flex-row items-center gap-2">
+            <View style={{ width: 14, height: 3, borderRadius: 2, backgroundColor: '#C9A84C' }} />
+            <Text className="text-white/60 text-xs font-semibold">{overlay.baseLabel ?? 'Profile'}</Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <View style={{ width: 14, height: 3, borderRadius: 2, backgroundColor: overlay.color }} />
+            <Text className="text-white/60 text-xs font-semibold">{overlay.label}</Text>
+          </View>
+        </View>
+      )}
 
       <View className="flex-row flex-wrap gap-3">
         {PILLARS.map((pillar, index) => {

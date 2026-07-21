@@ -38,6 +38,21 @@ const fallbackProfile = (userId: string): CommunityProfile => ({
   bio: '',
 });
 
+// Best-effort public sextets for a set of users, for the signature hexagon.
+// Returns an empty map if the RPC is unavailable (e.g. before migration 023)
+// so the feed still renders without signatures.
+async function loadPublicSextets(userIds: string[]): Promise<Map<string, Partial<Record<PillarId, number>>>> {
+  if (!userIds.length) return new Map();
+  const { data, error } = await supabase.rpc('get_public_sextets', { p_user_ids: userIds });
+  if (error || !data) return new Map();
+  return new Map(
+    (data as Array<{ user_id: string; pillar_scores: unknown }>).map((row) => [
+      row.user_id,
+      (row.pillar_scores ?? {}) as Partial<Record<PillarId, number>>,
+    ])
+  );
+}
+
 async function hydratePosts(rows: Array<{
   id: string;
   user_id: string;
@@ -60,6 +75,12 @@ async function hydratePosts(rows: Array<{
   if (likesResult.error) throw likesResult.error;
   if (commentsResult.error) throw commentsResult.error;
   const profiles = new Map((profilesResult.data ?? []).map((profile) => [profile.user_id, mapProfile(profile)]));
+
+  const sextets = await loadPublicSextets(userIds);
+  sextets.forEach((pillarScores, userId) => {
+    const profile = profiles.get(userId);
+    if (profile) profile.pillarScores = pillarScores;
+  });
 
   return rows.map((post) => {
     const likes = (likesResult.data ?? []).filter((like) => like.post_id === post.id);
@@ -380,6 +401,7 @@ export async function loadPillarLeaderboard(pillar: PillarId, limit = 50): Promi
     display_name: string;
     avatar_path: string | null;
     pillar_score: number;
+    pillar_scores?: unknown;
     rank: number;
   }) => ({
     userId: row.user_id,
@@ -387,6 +409,7 @@ export async function loadPillarLeaderboard(pillar: PillarId, limit = 50): Promi
     displayName: row.display_name || 'Operator',
     avatarUrl: publicFileUrl('avatars', row.avatar_path),
     pillarScore: row.pillar_score,
+    pillarScores: (row.pillar_scores ?? undefined) as PillarLeaderboardEntry['pillarScores'],
     rank: row.rank,
   }));
 }

@@ -7,6 +7,9 @@ import { PILLARS } from '../../lib/pillars';
 import { loadSocialProfile, SOCIAL_PLATFORMS } from '../../lib/social-profile';
 import { connectGoogleCalendar, disconnectGoogleCalendar, getCalendarConnectionStatus } from '../../lib/calendar';
 import { SextetChart } from '../../components/profile/SextetChart';
+import { MiniHexagon } from '../../components/profile/MiniHexagon';
+import { BenchmarkStandings } from '../../components/profile/BenchmarkStandings';
+import { loadBenchmarkStandings, type BenchmarkStanding } from '../../lib/benchmark-summary';
 import type { SocialLink, SocialProfile } from '../../types';
 
 const PHASE_DESCRIPTIONS = {
@@ -22,6 +25,7 @@ export default function Profile() {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [calendarStatus, setCalendarStatus] = useState<'connected' | 'disconnected'>('disconnected');
   const [calendarBusy, setCalendarBusy] = useState(false);
+  const [standings, setStandings] = useState<BenchmarkStanding[]>([]);
 
   useFocusEffect(useCallback(() => {
     if (!profile?.id) return;
@@ -30,6 +34,7 @@ export default function Profile() {
       .then(({ profile: nextProfile, links }) => { setSocialProfile(nextProfile); setSocialLinks(links); })
       .catch(() => undefined);
     getCalendarConnectionStatus(profile.id).then(setCalendarStatus).catch(() => undefined);
+    loadBenchmarkStandings(profile.id).then(setStandings).catch(() => undefined);
   }, [profile?.id, loadProfile]));
 
   const toggleCalendar = async () => {
@@ -61,6 +66,7 @@ export default function Profile() {
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       <ScrollView className="flex-1 px-6 pt-6" contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View className="items-center mb-6">
+          <View className="absolute right-0 top-0"><MiniHexagon scores={profile.pillarScores} size={46} showGrid dots /></View>
           <View className="w-24 h-24 rounded-full bg-surface-raised border-2 border-gold items-center justify-center mb-4 overflow-hidden">
             {socialProfile?.avatarUrl ? (
               <Image source={{ uri: socialProfile.avatarUrl }} className="w-full h-full" resizeMode="cover" />
@@ -121,6 +127,12 @@ export default function Profile() {
         <View className="mb-6">
           <SextetChart scores={profile.pillarScores} />
         </View>
+
+        {standings.length > 0 && (
+          <View className="mb-6">
+            <BenchmarkStandings standings={standings} />
+          </View>
+        )}
 
         <View className="bg-surface-raised rounded-2xl p-5 mb-6">
           <Text className="text-white/50 text-xs tracking-widest uppercase mb-4">Active Pillars</Text>

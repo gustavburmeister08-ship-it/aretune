@@ -3,6 +3,8 @@ import { Alert, FlatList, Image, Linking, Text, TouchableOpacity, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SextetChart } from '../../../components/profile/SextetChart';
+import { PillarComparison } from '../../../components/profile/PillarComparison';
+import { MiniHexagon } from '../../../components/profile/MiniHexagon';
 import { PostCard } from '../../../components/social/PostCard';
 import {
   getOrCreateDirectConversation,
@@ -15,6 +17,8 @@ import { PILLARS } from '../../../lib/pillars';
 import { SOCIAL_PLATFORMS } from '../../../lib/social-profile';
 import { useAuthStore } from '../../../store/auth';
 import type { CommunityPost, PublicCommunityProfile, SocialLink, SocialReportReason } from '../../../types';
+
+const COMPARE_COLOR = '#6C8CFF';
 
 export default function PublicProfileScreen() {
   const router = useRouter();
@@ -91,12 +95,17 @@ export default function PublicProfileScreen() {
     { text: 'Cancel', style: 'cancel' },
   ]);
 
+  const youScores = currentUser?.pillarScores ?? {};
+  const canCompare = Object.keys(youScores).length > 0;
+  const otherLabel = profile ? (profile.username ? `@${profile.username}` : profile.displayName) : '';
+
   const header = profile ? (
     <View>
       <View className="px-6 pt-3 pb-7 items-center border-b border-surface-border">
         <View className="w-28 h-28 rounded-full bg-surface-raised border-2 border-gold items-center justify-center overflow-hidden">
           {profile.avatarUrl ? <Image source={{ uri: profile.avatarUrl }} className="w-full h-full" resizeMode="cover" /> : <Text className="text-gold text-4xl font-bold">{profile.displayName[0]?.toUpperCase() ?? 'O'}</Text>}
         </View>
+        <View className="absolute right-6 top-3"><MiniHexagon scores={profile.pillarScores} size={46} showGrid dots /></View>
         <Text className="text-white text-2xl font-bold text-center mt-4">{profile.displayName}</Text>
         {profile.username && <Text className="text-gold/80 text-sm mt-1">@{profile.username}</Text>}
         {!!profile.bio && <Text className="text-white/55 text-sm leading-5 text-center mt-2 max-w-md">{profile.bio}</Text>}
@@ -117,8 +126,14 @@ export default function PublicProfileScreen() {
         )}
       </View>
 
-      <View className="px-5 py-6">
-        <SextetChart scores={profile.pillarScores} />
+      <View className="px-5 py-6 gap-5">
+        <SextetChart
+          scores={profile.pillarScores}
+          overlay={canCompare ? { scores: youScores, color: COMPARE_COLOR, label: 'You', baseLabel: otherLabel } : undefined}
+        />
+        {canCompare && (
+          <PillarComparison you={youScores} them={profile.pillarScores} themLabel={otherLabel} youColor={COMPARE_COLOR} />
+        )}
       </View>
 
       <View className="px-5 pb-6">
