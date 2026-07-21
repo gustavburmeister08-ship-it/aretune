@@ -66,6 +66,7 @@ export default function AppLayout() {
       <Tabs.Screen name="pillars" options={{ href: null }} />
       <Tabs.Screen name="audit" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />
+      <Tabs.Screen name="billing" options={{ href: null }} />
       <Tabs.Screen name="privacy" options={{ href: null }} />
       <Tabs.Screen name="integrations" options={{ href: null }} />
       <Tabs.Screen name="category/[categoryId]" options={{ href: null }} />

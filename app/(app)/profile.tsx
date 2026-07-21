@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
-import { Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuthStore } from '../../store/auth';
 import { PILLARS } from '../../lib/pillars';
 import { loadSocialProfile, SOCIAL_PLATFORMS } from '../../lib/social-profile';
+import { connectGoogleCalendar, disconnectGoogleCalendar, getCalendarConnectionStatus } from '../../lib/calendar';
 import { SextetChart } from '../../components/profile/SextetChart';
 import type { SocialLink, SocialProfile } from '../../types';
 
@@ -19,6 +20,8 @@ export default function Profile() {
   const { profile, signOut, loadProfile } = useAuthStore();
   const [socialProfile, setSocialProfile] = useState<SocialProfile>();
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const [calendarStatus, setCalendarStatus] = useState<'connected' | 'disconnected'>('disconnected');
+  const [calendarBusy, setCalendarBusy] = useState(false);
 
   useFocusEffect(useCallback(() => {
     if (!profile?.id) return;
@@ -26,7 +29,24 @@ export default function Profile() {
     loadSocialProfile(profile.id)
       .then(({ profile: nextProfile, links }) => { setSocialProfile(nextProfile); setSocialLinks(links); })
       .catch(() => undefined);
+    getCalendarConnectionStatus(profile.id).then(setCalendarStatus).catch(() => undefined);
   }, [profile?.id, loadProfile]));
+
+  const toggleCalendar = async () => {
+    setCalendarBusy(true);
+    try {
+      if (calendarStatus === 'connected') {
+        await disconnectGoogleCalendar();
+        setCalendarStatus('disconnected');
+      } else {
+        await connectGoogleCalendar();
+      }
+    } catch (error) {
+      Alert.alert('Google Calendar', error instanceof Error ? error.message : 'Please try again.');
+    } finally {
+      setCalendarBusy(false);
+    }
+  };
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure?', [
@@ -83,7 +103,12 @@ export default function Profile() {
 
           <View className="flex-row gap-3 mt-4">
             <View className="bg-surface-raised rounded-full px-4 py-1.5"><Text className="text-gold text-xs font-medium tracking-widest uppercase">Level {profile.level}</Text></View>
-            <View className="bg-surface-raised rounded-full px-4 py-1.5"><Text className="text-white/50 text-xs tracking-widest uppercase">{profile.subscriptionTier === 'pro' ? 'Pro' : 'Free'}</Text></View>
+            <TouchableOpacity className="bg-surface-raised rounded-full px-4 py-1.5" onPress={() => router.push('/(app)/billing' as never)}>
+              <Text className="text-white/50 text-xs tracking-widest uppercase">{profile.subscriptionTier === 'pro' ? 'Pro' : 'Free'}</Text>
+            </TouchableOpacity>
+            {profile.foundingMember && (
+              <View className="bg-gold/10 border border-gold/40 rounded-full px-4 py-1.5"><Text className="text-gold text-xs tracking-widest uppercase">⭑ Founding</Text></View>
+            )}
           </View>
         </View>
 
@@ -112,8 +137,23 @@ export default function Profile() {
           </View>
         </View>
 
+        <View className="bg-surface-raised rounded-2xl p-5 mb-6">
+          <Text className="text-white/50 text-xs tracking-widest uppercase mb-2">Google Calendar</Text>
+          <Text className="text-white/40 text-sm mb-4">
+            {calendarStatus === 'connected'
+              ? "Connected. Today's meetings are included as read-only context in your AI chat."
+              : 'Connect to let your AI coach plan around your meetings.'}
+          </Text>
+          <TouchableOpacity className="border border-gold rounded-xl py-3 items-center" onPress={() => void toggleCalendar()} disabled={calendarBusy}>
+            {calendarBusy ? <ActivityIndicator color="#C9A84C" /> : (
+              <Text className="text-gold font-bold">{calendarStatus === 'connected' ? 'Disconnect' : 'Connect Google Calendar'}</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <View className="bg-surface-raised rounded-2xl overflow-hidden mb-6">
           {[
+            { label: 'Plan & Billing', icon: '✦', onPress: () => router.push('/(app)/billing' as never) },
             { label: 'Connected Tracking Apps', icon: '⌁', onPress: () => router.push('/(app)/integrations' as never) },
             { label: 'Privacy & Data', icon: '🔒', onPress: () => router.push('/(app)/privacy' as never) },
             { label: 'About ARETUNE', icon: 'ⓘ', onPress: () => Alert.alert('ARETUNE', 'Six pillars. One daily action. Honest weekly progress.') },

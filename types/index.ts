@@ -238,6 +238,10 @@ export interface UserProfile {
   activePillars: PillarId[];
   onboardingComplete: boolean;
   subscriptionTier: 'free' | 'pro';
+  foundingMember: boolean;
+  subscriptionPlan?: 'weekly' | 'monthly' | 'annual';
+  subscriptionStatus?: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'unpaid' | 'paused';
+  subscriptionCurrentPeriodEnd?: string;
   createdAt: string;
   pillarScores: Partial<Record<PillarId, number>>;
   legalConsentComplete: boolean;

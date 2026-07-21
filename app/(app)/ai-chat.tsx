@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../store/auth';
 import { createConversation, listConversations, loadMessages, sendMessage } from '../../lib/ai-chat';
 import type { ChatMessage } from '../../types';
 
 export default function AiChatScreen() {
+  const router = useRouter();
   const { profile } = useAuthStore();
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -47,9 +49,17 @@ export default function AiChatScreen() {
         pillarScores: profile.pillarScores ?? {},
       });
       setMessages((current) => [...current, userMessage, assistantMessage]);
-    } catch {
+    } catch (error) {
       setBody(text);
-      Alert.alert('Could not send message', 'Your AI coach is unavailable right now — try again in a moment.');
+      const message = error instanceof Error ? error.message : '';
+      if (message.startsWith('API 429')) {
+        Alert.alert('Daily AI limit reached', 'Free plans get 5 AI requests/day. Upgrade to Pro for unlimited access.', [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Upgrade', onPress: () => router.push('/(app)/billing' as never) },
+        ]);
+      } else {
+        Alert.alert('Could not send message', 'Your AI coach is unavailable right now — try again in a moment.');
+      }
     } finally {
       setSending(false);
     }

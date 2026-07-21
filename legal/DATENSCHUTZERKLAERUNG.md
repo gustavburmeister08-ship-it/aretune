@@ -4,9 +4,10 @@ Stand: 14. Juli 2026 · Version 2026-07-14-integrations-v1
 
 ## 1. Verantwortlicher
 
-Gustav Burmeister  
-**[LADUNGSFÄHIGE STRASSE UND HAUSNUMMER]**  
-**[PLZ ORT]**, Deutschland  
+Aretune – Einzelunternehmen Gustav Burmeister  
+Gustav Heinz Burmeister  
+An der Märchenwiese 40  
+04277 Leipzig, Deutschland  
 E-Mail: **privacy@aretune.com – vor Veröffentlichung Funktionsfähigkeit bestätigen**
 
 ## 2. Gegenstand und Grundsätze

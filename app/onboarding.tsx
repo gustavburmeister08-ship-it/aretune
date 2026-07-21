@@ -183,7 +183,6 @@ export default function Onboarding() {
       level: '1.0',
       active_pillars: activePillars,
       onboarding_complete: true,
-      subscription_tier: 'free',
     });
     if (profileError) throw profileError;
 

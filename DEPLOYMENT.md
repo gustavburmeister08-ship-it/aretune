@@ -62,6 +62,27 @@ operator information, credentials, or a hosting decision before publication.
 
 - **BLOCKED:** configure Cloudflare alerts/log retention and review Workers AI
   usage before inviting a larger cohort.
+- Monetization (Phase 4, 2026-07-21): `/api/billing/checkout`, `/api/billing/portal`,
+  and `/api/webhooks/stripe` are deployed. Free/Pro AI-request gating
+  (`AI_FREE_DAILY_REQUEST_LIMIT` / `AI_PRO_DAILY_REQUEST_LIMIT`) is live.
+  **BLOCKED:** Gustav needs to create the Stripe products (Pro Weekly €9.99,
+  Pro Monthly €29.99, Pro Annual €299) and a webhook endpoint pointed at
+  `/api/webhooks/stripe`, then set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+  `STRIPE_PRICE_WEEKLY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_ANNUAL` on
+  `app-aretune` (see `app/.env` for the placeholder entries). Until then
+  checkout/portal return a 503 with `setupRequired: true`.
+- Google Calendar (Phase 5, 2026-07-21): read-only OAuth connect/callback
+  reuses the existing generic integration OAuth flow (`google-calendar`
+  provider). Connected events feed into `/api/chat` as context. **BLOCKED:**
+  Gustav needs to create a Google Cloud OAuth 2.0 Web Client (redirect URI
+  `https://app.aretune.com/api/integrations/google-calendar/callback`,
+  scope `calendar.readonly`) and set `GOOGLE_CALENDAR_CLIENT_ID` /
+  `GOOGLE_CALENDAR_CLIENT_SECRET` on `app-aretune` (placeholders in
+  `app/.env`). Garmin and Samsung Health remain unimplemented: Garmin
+  requires a partner-approved Health API application (no credentials to
+  build against yet) and Samsung Health is native-SDK-only, which a
+  Cloudflare Pages Function cannot call — neither is a pure coding task
+  until Gustav has provider access.
 - `aretune.com` is registered on Cloudflare. It is used as a custom domain on
   the `aretune` (website, root) and `app-aretune` (app, `app.` subdomain)
   Pages projects.
@@ -112,10 +133,37 @@ on Alpha retention evidence as defined in `PRODUCT_SPEC.md`.
 
 ## Required operator input
 
-1. Ladungsfähige postal address for the Impressum and privacy notice.
+1. ~~Ladungsfähige postal address for the Impressum and privacy notice.~~
+   Done: 2026-07-21, filled in from `info/onboarding-auswertung.md` §1
+   (An der Märchenwiese 40, 04277 Leipzig). Legal form clarified the same
+   day: "Aretune" is a brand name, the actual registration is a German
+   sole proprietorship (Kleingewerbe) — "Inc." removed from both Impressums,
+   Kleinunternehmer §19 UStG status confirmed correct.
 2. Confirmation that `support@aretune.com` and `privacy@aretune.com`
    exist and are monitored.
 3. ~~Decision and DNS access for the final custom domain.~~ Done: `aretune.com`
    registered on Cloudflare, 2026-07-20.
 4. Confirmed backup deletion period and signed processor agreements with
    Supabase and Cloudflare (AVV/DPA).
+
+## Phase 6 (App Store prep, 2026-07-21) — status
+
+Everything code-side is ready: `app.json`/`eas.json` bundle identifiers,
+icons, and build profiles are configured and validated (`expo-doctor`:
+19/19 checks pass after bumping 7 Expo SDK packages to their expected patch
+versions). What remains is exclusively operator setup, not development work:
+
+- **BLOCKED:** authenticate an Expo/EAS account (`eas login` or `EXPO_TOKEN`)
+  and run `eas init` to link this project — no session exists on this
+  machine.
+- **BLOCKED:** Apple Developer Program membership + App Store Connect app
+  record (bundle ID `com.aretune.app`); Google Play Console developer
+  account + app record (package `com.aretune.app`). Neither exists yet.
+- **BLOCKED:** fill in `eas.json`'s empty `submit.production` block with the
+  Apple Team ID / ASC API key and the Android service-account JSON once
+  those accounts exist.
+- Once the above exists: `eas build --profile production` for both
+  platforms, then `eas submit`, then the store listing (screenshots,
+  description, privacy policy URL — already public at
+  `https://app.aretune.com/legal`, age rating questionnaire) directly in
+  App Store Connect / Play Console. No further code changes expected.

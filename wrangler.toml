@@ -8,6 +8,7 @@ binding = "AI"
 
 [vars]
 SUPABASE_URL = "https://qixluaundyxqsnrktfdu.supabase.co"
-AI_DAILY_TOKEN_BUDGET = "200000"
+AI_FREE_DAILY_REQUEST_LIMIT = "5"
+AI_PRO_DAILY_REQUEST_LIMIT = "300"
 APP_URL = "https://app.aretune.com"
 WEB_APP_URL = "https://app.aretune.com"
