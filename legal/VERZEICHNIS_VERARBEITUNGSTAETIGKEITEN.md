@@ -1,7 +1,7 @@
 # Internes Verzeichnis von Verarbeitungstätigkeiten – Alpha
 
-Verantwortlicher: Gustav Burmeister, **[Anschrift ergänzen]**  
-Stand: 14. Juli 2026
+Verantwortlicher: Aretune – Einzelunternehmen Gustav Burmeister, An der Märchenwiese 40, 04277 Leipzig  
+Stand: 21. Juli 2026
 
 | Verarbeitung | Betroffene/Daten | Zweck | Rechtsgrundlage | Empfänger | Löschziel |
 |---|---|---|---|---|---|

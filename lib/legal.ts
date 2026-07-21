@@ -1,11 +1,11 @@
-export const TERMS_VERSION = '2026-07-14-integrations-v1';
-export const PRIVACY_VERSION = '2026-07-14-integrations-v1';
+export const TERMS_VERSION = '2026-07-21-legal-entity-v1';
+export const PRIVACY_VERSION = '2026-07-21-legal-entity-v1';
 export const AI_NOTICE_VERSION = '2026-07-14';
 
 export const LEGAL_TEXTS = {
   privacy: {
     title: 'Datenschutzerklärung',
-    content: `Verantwortlicher: Gustav Burmeister, [LADUNGSFÄHIGE ANSCHRIFT], privacy@aretune.com.
+    content: `Verantwortlicher: Gustav Burmeister (Einzelunternehmen), An der Märchenwiese 40, 04277 Leipzig, privacy@aretune.com.
 
 ARETUNE verarbeitet Konto- und Profildaten, freiwillige Social-Profilangaben, Posts, Bilder, Likes, Kommentare, Meldungen und private Nachrichten, außerdem Onboarding-Antworten, Check-ins, detaillierte Kategorie-Metriken und Notizen, Scores, Direktiven, Audits, Einwilligungsnachweise und technische Produkt-Events. Bei aktiviertem Community-Profil sind Name, Beschreibung, Profilbild, externe Profillinks und veröffentlichte Beiträge für angemeldete Community-Mitglieder sichtbar; veröffentlichte Medien werden über öffentlich abrufbare, schwer erratbare URLs bereitgestellt. Private Nachrichten sind nur für die Gesprächsteilnehmer lesbar. Kategorie-Metriken bleiben kontobezogen geschützt und sind keine öffentlichen Profildaten.
 
@@ -21,7 +21,7 @@ Die vollständige, veröffentlichungsfähige Fassung befindet sich im Projekt un
   },
   terms: {
     title: 'Nutzungsbedingungen',
-    content: `Anbieter: Gustav Burmeister, [LADUNGSFÄHIGE ANSCHRIFT], support@aretune.com.
+    content: `Anbieter: Gustav Burmeister (Einzelunternehmen), An der Märchenwiese 40, 04277 Leipzig, support@aretune.com.
 
 ARETUNE ist ein Selbstreflexions-, Tracking- und Coaching-Werkzeug für volljährige Nutzer. Der Dienst ist kein Medizinprodukt und ersetzt keine ärztliche, psychotherapeutische, rechtliche oder finanzielle Beratung. KI-Ausgaben können falsch, unvollständig oder ungeeignet sein und müssen eigenverantwortlich geprüft werden.
 

@@ -1,6 +1,6 @@
 # Datenschutzerklärung für ARETUNE
 
-Stand: 14. Juli 2026 · Version 2026-07-14-integrations-v1
+Stand: 21. Juli 2026 · Version 2026-07-21-legal-entity-v1
 
 ## 1. Verantwortlicher
 

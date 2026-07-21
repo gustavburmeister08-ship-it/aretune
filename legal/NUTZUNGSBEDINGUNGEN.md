@@ -1,10 +1,10 @@
 # Nutzungsbedingungen für ARETUNE
 
-Stand: 14. Juli 2026 · Version 2026-07-14-integrations-v1
+Stand: 21. Juli 2026 · Version 2026-07-21-legal-entity-v1
 
 ## 1. Anbieter und Geltung
 
-Anbieter ist Gustav Burmeister, **[VOLLSTÄNDIGE LADUNGSFÄHIGE ANSCHRIFT]**, E-Mail **support@aretune.com – bestätigen**. Diese Bedingungen gelten für die Nutzung von ARETUNE durch volljährige Verbraucher und Unternehmer.
+Anbieter ist Aretune – Einzelunternehmen Gustav Burmeister, An der Märchenwiese 40, 04277 Leipzig, E-Mail **support@aretune.com – bestätigen**. Diese Bedingungen gelten für die Nutzung von ARETUNE durch volljährige Verbraucher und Unternehmer.
 
 ## 2. Leistungsgegenstand
 
